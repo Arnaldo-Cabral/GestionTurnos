@@ -1,46 +1,114 @@
-// src/components/UsuarioForm.jsx
-import { useState, useEffect } from 'react';
-import { TextField, Button, MenuItem, Box } from '@mui/material';
+import { useState } from 'react';
+import { TextField, Button, MenuItem, Stack } from '@mui/material';
 import api from '../services/api';
 
-const roles = ['ADMIN', 'RECEPCIONISTA', 'PROFESIONAL'];
+const roles = ['RECEPCIONISTA', 'PROFESIONAL'];
 
-const UsuarioForm = ({ usuario, onSuccess }) => {
-  const [form, setForm] = useState(usuario);
-
-  useEffect(() => {
-    setForm(usuario);
-  }, [usuario]);
+const UsuarioForm = ({ onUsuarioCreado }) => {
+  const [form, setForm] = useState({
+    nombre: '',
+    email: '',
+    password: '',
+    rol: '',
+    especialidad: '',
+    matricula: ''
+  });
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.put(`/usuarios/${usuario.id}`, form);
-      alert('Usuario actualizado');
-      onSuccess?.();
-    } catch {
-      alert('Error al actualizar usuario');
+      const payload = {
+        nombre: form.nombre,
+        email: form.email,
+        password: form.password,
+        rol: form.rol
+      };
+
+      if (form.rol === 'PROFESIONAL') {
+        payload.especialidad = form.especialidad;
+        payload.matricula = form.matricula;
+      }
+
+      const res = await api.post('/usuarios', payload);
+      onUsuarioCreado(res.data);
+
+      setForm({
+        nombre: '',
+        email: '',
+        password: '',
+        rol: '',
+        especialidad: '',
+        matricula: ''
+      });
+    } catch (error) {
+      console.error('Error al crear usuario:', error);
     }
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ display: 'grid', gap: 2 }}>
-      <TextField name="nombre" label="Nombre" value={form.nombre} onChange={handleChange} />
-      <TextField name="email" label="Email" value={form.email} onChange={handleChange} />
-      <TextField select name="rol" label="Rol" value={form.rol} onChange={handleChange}>
-        {roles.map(r => <MenuItem key={r} value={r}>{r}</MenuItem>)}
-      </TextField>
-      <TextField select name="activo" label="Activo" value={form.activo} onChange={handleChange}>
-        <MenuItem value={true}>Sí</MenuItem>
-        <MenuItem value={false}>No</MenuItem>
-      </TextField>
-      <Button type="submit" variant="contained">Guardar Cambios</Button>
-    </Box>
+    <form onSubmit={handleSubmit}>
+      <Stack spacing={2}>
+        <TextField
+          label="Nombre"
+          name="nombre"
+          value={form.nombre}
+          onChange={handleChange}
+          required
+        />
+        <TextField
+          label="Email"
+          name="email"
+          value={form.email}
+          onChange={handleChange}
+          required
+        />
+        <TextField
+          label="Contraseña"
+          name="password"
+          type="password"
+          value={form.password}
+          onChange={handleChange}
+          required
+        />
+        <TextField
+          select
+          label="Rol"
+          name="rol"
+          value={form.rol}
+          onChange={handleChange}
+          required
+        >
+          {roles.map((r) => (
+            <MenuItem key={r} value={r}>{r}</MenuItem>
+          ))}
+        </TextField>
+
+        {form.rol === 'PROFESIONAL' && (
+          <>
+            <TextField
+              label="Especialidad"
+              name="especialidad"
+              value={form.especialidad}
+              onChange={handleChange}
+              required
+            />
+            <TextField
+              label="Matrícula"
+              name="matricula"
+              value={form.matricula}
+              onChange={handleChange}
+              required
+            />
+          </>
+        )}
+
+        <Button type="submit" variant="contained">Crear usuario</Button>
+      </Stack>
+    </form>
   );
 };
 

@@ -15,9 +15,9 @@ const Layout = () => {
 
   const menuItems = {
     ADMIN: [
-      { text: 'Usuarios', path: '/usuarios' },
+      { text: 'Usuarios', path: '/usuarios' }/* ,
       { text: 'Pacientes', path: '/pacientes' },
-      { text: 'Turnos', path: '/turnos' }
+      { text: 'Turnos', path: '/turnos' } */
     ],
     RECEPCIONISTA: [
       { text: 'Pacientes', path: '/pacientes' },

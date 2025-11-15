@@ -20,10 +20,10 @@ function App() {
           <PrivateRoute roles={['ADMIN']}><Usuarios /></PrivateRoute>
         } />
         <Route path="/pacientes" element={
-          <PrivateRoute roles={['ADMIN', 'RECEPCIONISTA']}><Pacientes /></PrivateRoute>
+          <PrivateRoute roles={['RECEPCIONISTA']}><Pacientes /></PrivateRoute>
         } />
         <Route path="/turnos" element={
-          <PrivateRoute roles={['ADMIN', 'RECEPCIONISTA']}><Turnos /></PrivateRoute>
+          <PrivateRoute roles={['RECEPCIONISTA']}><Turnos /></PrivateRoute>
         } />
         <Route path="/historias" element={
           <PrivateRoute roles={['RECEPCIONISTA', 'PROFESIONAL']}><Historias /></PrivateRoute>

@@ -20,12 +20,12 @@ const Dashboard = () => {
             <Button variant="contained" onClick={() => navigate('/usuarios')}>
               Administrar usuarios
             </Button>
-            <Button variant="contained" onClick={() => navigate('/pacientes')}>
+           {/*  <Button variant="contained" onClick={() => navigate('/pacientes')}>
               Ver pacientes
             </Button>
             <Button variant="contained" onClick={() => navigate('/turnos')}>
               Ver turnos
-            </Button>
+            </Button> */}
           </>
         )}
 

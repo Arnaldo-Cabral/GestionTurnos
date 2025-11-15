@@ -1,54 +1,65 @@
-// src/pages/Usuarios.jsx
 import { useEffect, useState } from 'react';
-import { Container, Typography, List, ListItem, IconButton, Divider } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { Container, Typography, List, ListItem, Divider, Button } from '@mui/material';
 import api from '../services/api';
 import UsuarioForm from '../components/UsuarioForm';
+import UsuarioEditForm from '../components/UsuarioEditForm';
 
 const Usuarios = () => {
   const [usuarios, setUsuarios] = useState([]);
-  const [seleccionado, setSeleccionado] = useState(null);
+  const [usuarioEditando, setUsuarioEditando] = useState(null);
 
   const cargarUsuarios = async () => {
-    const res = await api.get('/usuarios');
-    setUsuarios(res.data);
-  };
-
-  const eliminarUsuario = async (id) => {
-    if (confirm('¿Eliminar este usuario?')) {
-      await api.delete(`/usuarios/${id}`);
-      cargarUsuarios();
+    try {
+      const res = await api.get('/usuarios');
+      setUsuarios(res.data);
+    } catch (error) {
+      console.error('Error al cargar usuarios:', error);
     }
   };
 
-  useEffect(() => { cargarUsuarios(); }, []);
+  useEffect(() => {
+    cargarUsuarios();
+  }, []);
+
+  const agregarUsuario = (nuevo) => {
+    setUsuarios((prev) => [...prev, nuevo]);
+  };
+
+  const actualizarUsuario = (actualizado) => {
+    setUsuarios((prev) =>
+      prev.map((u) => (u.id === actualizado.id ? actualizado : u))
+    );
+    setUsuarioEditando(null);
+  };
 
   return (
-    <Container>
-      <Typography variant="h4" gutterBottom>Panel de Administración de Usuarios</Typography>
-      <Divider sx={{ my: 2 }} />
-      <Typography variant="h6">Listado</Typography>
+    <Container sx={{ mt: 4 }}>
+      <Typography variant="h5" gutterBottom>Administrar usuarios</Typography>
+
+      <UsuarioForm onUsuarioCreado={agregarUsuario} />
+
+      <Typography variant="h6" sx={{ mt: 4 }}>Usuarios registrados</Typography>
       <List>
-        {usuarios.map(u => (
-          <ListItem key={u.id} secondaryAction={
-            <>
-              <IconButton onClick={() => setSeleccionado(u)}>✏️</IconButton>
-              <IconButton onClick={() => eliminarUsuario(u.id)}><DeleteIcon /></IconButton>
-            </>
-          }>
-            {u.nombre} ({u.rol}) - {u.email}
-          </ListItem>
+        {usuarios.map((u) => (
+          <div key={u.id}>
+            <ListItem
+              secondaryAction={
+                <Button variant="outlined" onClick={() => setUsuarioEditando(u)}>Editar</Button>
+              }
+            >
+              {u.nombre} — {u.email} — {u.rol}
+            </ListItem>
+            <Divider />
+          </div>
         ))}
       </List>
-      {seleccionado && (
-        <>
-          <Divider sx={{ my: 3 }} />
-          <Typography variant="h6">Editar Usuario</Typography>
-          <UsuarioForm usuario={seleccionado} onSuccess={() => {
-            setSeleccionado(null);
-            cargarUsuarios();
-          }} />
-        </>
+
+      {usuarioEditando && (
+        <UsuarioEditForm
+          usuario={usuarioEditando}
+          onUsuarioActualizado={actualizarUsuario}
+          onCancelar={() => setUsuarioEditando(null)}
+        />
       )}
     </Container>
   );
