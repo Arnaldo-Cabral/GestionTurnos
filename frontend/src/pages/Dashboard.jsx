@@ -20,7 +20,7 @@ const Dashboard = () => {
             <Button variant="contained" onClick={() => navigate('/usuarios')}>
               Administrar usuarios
             </Button>
-           {/*  <Button variant="contained" onClick={() => navigate('/pacientes')}>
+            {/*  <Button variant="contained" onClick={() => navigate('/pacientes')}>
               Ver pacientes
             </Button>
             <Button variant="contained" onClick={() => navigate('/turnos')}>
@@ -49,6 +49,9 @@ const Dashboard = () => {
           <>
             <Button variant="contained" onClick={() => navigate('/historias')}>
               Gestionar historias clínicas
+            </Button>
+            <Button variant="contained" onClick={() => navigate('/agenda')}>
+              Cargar agenda de atención
             </Button>
           </>
         )}

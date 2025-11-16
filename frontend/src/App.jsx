@@ -7,6 +7,7 @@ import Pacientes from './pages/Pacientes';
 import Turnos from './pages/Turnos';
 import Historias from './pages/Historias';
 import Login from './pages/Login';
+import Agenda from './pages/Agenda';
 
 function App() {
   return (
@@ -27,6 +28,9 @@ function App() {
         } />
         <Route path="/historias" element={
           <PrivateRoute roles={['RECEPCIONISTA', 'PROFESIONAL']}><Historias /></PrivateRoute>
+        } />
+        <Route path="/agenda" element={
+          <PrivateRoute roles={['PROFESIONAL']}><Agenda /></PrivateRoute>
         } />
       </Route>
     </Routes>

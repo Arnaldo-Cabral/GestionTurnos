@@ -25,7 +25,8 @@ const Layout = () => {
       { text: 'Historias clínicas', path: '/historias' }
     ],
     PROFESIONAL: [
-      { text: 'Historias clínicas', path: '/historias' }
+      { text: 'Historias clínicas', path: '/historias' },
+      { text: 'Agenda', path: '/agenda' }
     ]
   };
 

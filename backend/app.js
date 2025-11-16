@@ -13,5 +13,8 @@ app.use('/api/profesionales', require('./routes/profesionalRoutes'));
 app.use('/api/recepcionistas', require('./routes/recepcionistaRoutes'));
 app.use('/api/turnos', require('./routes/turnoRoutes'));
 app.use('/api/historias_clinicas', require('./routes/historiaClinicaRoutes'));
+//ruta de agenda
+app.use('/api/agenda', require('./routes/agendaRoutes'));
+
 
 module.exports = app;
