@@ -8,8 +8,13 @@ router.post('/', verifyToken, isAdmin, profesionalController.create);
 router.put('/:id', verifyToken, isAdmin, profesionalController.update);
 router.delete('/:id', verifyToken, isAdmin, profesionalController.remove);
 
+// Nuevos endpoints para los profesionales
+router.get('/especialidades', verifyToken, checkRole(['RECEPCIONISTA']), profesionalController.getEspecialidades);
+router.get('/especialidad/:esp', verifyToken, checkRole(['RECEPCIONISTA']), profesionalController.getByEspecialidad);
+
+//****lo comente para probar si funciona** */
 //Para poder listar los profesionales en el front
-router.get('/especialidad/:esp', verifyToken, checkRole(['RECEPCIONISTA']), async (req, res) => {
+/* router.get('/especialidad/:esp', verifyToken, checkRole(['RECEPCIONISTA']), async (req, res) => {
   const { esp } = req.params;
   try {
     const profesionales = await Profesional.findAll({
@@ -20,6 +25,6 @@ router.get('/especialidad/:esp', verifyToken, checkRole(['RECEPCIONISTA']), asyn
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-});
+}); */
 
 module.exports = router;

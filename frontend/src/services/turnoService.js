@@ -1,13 +1,13 @@
-import axios from 'axios';
+import api from './api';
 
-export const consultarDisponibilidad = async (profesional_id, fecha, token) => {
-  return axios.get(`/turnos/disponibilidad?profesional_id=${profesional_id}&fecha=${fecha}`, {
-    headers: { Authorization: `Bearer ${token}` }
+// Consultar disponibilidad de un profesional en una fecha
+export const consultarDisponibilidad = async (profesional_id, fecha) => {
+  return api.get('/agenda/disponibilidad', {   // 👈 corregido: antes estaba /turnos/disponibilidad
+    params: { profesional_id, fecha }
   });
 };
 
-export const crearTurno = async (turnoData, token) => {
-  return axios.post('/turnos', turnoData, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
+// Crear un nuevo turno
+export const crearTurno = async (turnoData) => {
+  return api.post('/turnos', turnoData);
 };

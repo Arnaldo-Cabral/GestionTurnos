@@ -3,31 +3,31 @@ const router = express.Router();
 const turnoController = require('../controllers/turnoController');
 const { verifyToken, checkRole } = require('../middlewares/auth');
 
-// Solo RECEPCIONISTA puede gestionar turnos para mas seguridad se pone el Role
+// =======================================================
+// CRUD de turnos (solo recepcionista)
+// =======================================================
+
 router.get('/', verifyToken, checkRole(['RECEPCIONISTA']), turnoController.getAll);
-router.post('/', verifyToken, checkRole(['RECEPCIONISTA']), turnoController.create);
+
+// 👇 MODIFICA ESTA RUTA POST PARA AGREGAR EL DEBUG 👇
+router.post('/', verifyToken, checkRole(['RECEPCIONISTA']), (req, res, next) => {
+    console.log("📨 ¡Petición POST /api/turnos recibida en el Router!");
+    console.log("📦 Datos del cuerpo:", req.body);
+    
+    // Verificamos si el controlador existe antes de llamarlo
+    if (!turnoController.create) {
+        console.error("❌ ERROR CRÍTICO: turnoController.create es undefined");
+        return res.status(500).json({ message: "Error interno: Controlador no definido" });
+    }
+    
+    next(); // Pasa al controlador real
+}, turnoController.create);
+
 router.put('/:id', verifyToken, checkRole(['RECEPCIONISTA']), turnoController.update);
 router.delete('/:id', verifyToken, checkRole(['RECEPCIONISTA']), turnoController.remove);
 
-//ESto es para consultar disponibilidad del profesional
-const { Op } = require('sequelize');
-
-router.get('/disponibilidad', verifyToken, checkRole(['RECEPCIONISTA']), async (req, res) => {
-  const { profesional_id, fecha } = req.query;
-  try {
-    const turnos = await Turno.findAll({
-      where: {
-        profesional_id,
-        fecha: {
-          [Op.startsWith]: fecha // o usar BETWEEN para rango horario
-        },
-        estado: { [Op.not]: 'CANCELADO' }
-      }
-    });
-    res.json(turnos); // Devuelve horarios ocupados
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+// ... el resto de tus rutas siguen igual
+router.get('/disponibilidad', verifyToken, checkRole(['RECEPCIONISTA']), turnoController.getDisponibilidad);
+router.get('/pendientes/:profesional_id', verifyToken, checkRole(['PROFESIONAL']), turnoController.getPendientesPorProfesional);
 
 module.exports = router;

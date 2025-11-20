@@ -1,46 +1,7 @@
-/* import { useState } from 'react';
-import { buscarPacientePorDNI } from '../services/pacienteService';
-
-const BuscarPaciente = ({ onSelect }) => {
-    const [dni, setDni] = useState('');
-    const [paciente, setPaciente] = useState(null);
-
-    const handleBuscar = async () => {
-        const token = localStorage.getItem('token');
-        try {
-            const res = await buscarPacientePorDNI(dni, token);
-            setPaciente(res.data);
-            onSelect(res.data); // pasa el paciente al padre
-
-            console.log('Paciente recibido:', res.data);//bucscar en el log
-
-        } catch {
-            setPaciente(null);
-        }
-    };
-
-    return (
-        <div>
-            <input value={dni} onChange={e => setDni(e.target.value)} placeholder="DNI del paciente" />
-            <button onClick={handleBuscar}>Buscar</button>
-            {paciente && (
-                <div style={{ border: '1px solid #ccc', padding: '10px', marginTop: '10px', borderRadius: '5px' }}>
-                    <p><strong>Nombre:</strong> {paciente.nombre}</p>
-                    <p><strong>DNI:</strong> {paciente.dni}</p>
-                    <p><strong>Teléfono:</strong> {paciente.telefono}</p>
-                </div>
-            )}
-
-        </div>
-    );
-};
-
-export default BuscarPaciente; */
-
 import { useState } from 'react';
 import axios from 'axios';
 
-const BuscarPaciente = () => {
+const BuscarPaciente = ({ onSelect }) => {   // 👈 ahora recibe onSelect
   const [dni, setDni] = useState('');
   const [paciente, setPaciente] = useState(null);
   const [error, setError] = useState('');
@@ -52,7 +13,12 @@ const BuscarPaciente = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPaciente(res.data);
-      setError(''); // limpio error si encuentro paciente
+      setError('');
+
+      // 👇 avisamos al padre (AsignarTurno) que se seleccionó un paciente
+      if (onSelect) {
+        onSelect(res.data);
+      }
     } catch (err) {
       if (err.response && err.response.status === 404) {
         setError('Paciente no encontrado');

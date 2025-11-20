@@ -15,9 +15,10 @@ const Layout = () => {
 
   const menuItems = {
     ADMIN: [
-      { text: 'Usuarios', path: '/usuarios' }/* ,
-      { text: 'Pacientes', path: '/pacientes' },
-      { text: 'Turnos', path: '/turnos' } */
+      { text: 'Usuarios', path: '/usuarios' }
+      // Podés habilitar más rutas si querés:
+      // { text: 'Pacientes', path: '/pacientes' },
+      // { text: 'Turnos', path: '/turnos' }
     ],
     RECEPCIONISTA: [
       { text: 'Pacientes', path: '/pacientes' },
@@ -56,7 +57,11 @@ const Layout = () => {
         <Toolbar />
         <List>
           {menuItems[usuario?.rol]?.map(item => (
-            <ListItem button key={item.text} onClick={() => navigate(item.path)}>
+            <ListItem 
+              /* button */  // 👈 corregido: sin ={true}
+              key={item.text} 
+              onClick={() => navigate(item.path)}
+            >
               <ListItemText primary={item.text} />
             </ListItem>
           ))}
