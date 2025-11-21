@@ -36,7 +36,7 @@ const BuscarPaciente = ({ onSelect }) => {   // 👈 ahora recibe onSelect
         type="text"
         value={dni}
         onChange={e => setDni(e.target.value)}
-        placeholder="Ingrese DNI"
+        placeholder="Ingrese DNI Paciente"
       />
       <button onClick={handleBuscar}>Buscar</button>
 

@@ -1,5 +1,18 @@
+// src/pages/Usuarios.jsx
 import { useEffect, useState } from 'react';
-import { Container, Typography, List, ListItem, Divider, Button } from '@mui/material';
+import {
+  Container,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Button,
+  Divider
+} from '@mui/material';
 import api from '../services/api';
 import UsuarioForm from '../components/UsuarioForm';
 import UsuarioEditForm from '../components/UsuarioEditForm';
@@ -38,21 +51,40 @@ const Usuarios = () => {
 
       <UsuarioForm onUsuarioCreado={agregarUsuario} />
 
-      <Typography variant="h6" sx={{ mt: 4 }}>Usuarios registrados</Typography>
-      <List>
-        {usuarios.map((u) => (
-          <div key={u.id}>
-            <ListItem
-              secondaryAction={
-                <Button variant="outlined" onClick={() => setUsuarioEditando(u)}>Editar</Button>
-              }
-            >
-              {u.nombre} — {u.email} — {u.rol}
-            </ListItem>
-            <Divider />
-          </div>
-        ))}
-      </List>
+      <Divider sx={{ my: 3 }} />
+
+      <Typography variant="h6">Usuarios registrados</Typography>
+
+      <TableContainer component={Paper} sx={{ mt: 2 }}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell><strong>Nombre</strong></TableCell>
+              <TableCell><strong>Email</strong></TableCell>
+              <TableCell><strong>Rol</strong></TableCell>
+              <TableCell><strong>Acciones</strong></TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {usuarios.map((u) => (
+              <TableRow key={u.id}>
+                <TableCell>{u.nombre}</TableCell>
+                <TableCell>{u.email}</TableCell>
+                <TableCell>{u.rol}</TableCell>
+                <TableCell>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => setUsuarioEditando(u)}
+                  >
+                    Editar
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
       {usuarioEditando && (
         <UsuarioEditForm

@@ -8,6 +8,8 @@ import Turnos from './pages/Turnos';
 import Historias from './pages/Historias';
 import Login from './pages/Login';
 import Agenda from './pages/Agenda';
+import GestionarTurno from './pages/GestionarTurno';
+
 
 function App() {
   return (
@@ -25,6 +27,9 @@ function App() {
         } />
         <Route path="/turnos" element={
           <PrivateRoute roles={['RECEPCIONISTA']}><Turnos /></PrivateRoute>
+        } />
+        <Route path="/turnos/gestion" element={
+          <PrivateRoute roles={['RECEPCIONISTA']}><GestionarTurno /></PrivateRoute>
         } />
         <Route path="/historias" element={
           <PrivateRoute roles={['RECEPCIONISTA', 'PROFESIONAL']}><Historias /></PrivateRoute>

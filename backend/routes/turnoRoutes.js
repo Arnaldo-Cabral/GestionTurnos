@@ -25,6 +25,8 @@ router.post('/', verifyToken, checkRole(['RECEPCIONISTA']), (req, res, next) => 
 
 router.put('/:id', verifyToken, checkRole(['RECEPCIONISTA']), turnoController.update);
 router.delete('/:id', verifyToken, checkRole(['RECEPCIONISTA']), turnoController.remove);
+/* === CON ESTO CAMBIO EL ESTADO DEL TURNO PENDIENTE CONFIRMADO CANELADO === */
+router.put('/:id/estado', verifyToken, checkRole(['RECEPCIONISTA']), turnoController.updateEstado);
 
 // ... el resto de tus rutas siguen igual
 router.get('/disponibilidad', verifyToken, checkRole(['RECEPCIONISTA']), turnoController.getDisponibilidad);

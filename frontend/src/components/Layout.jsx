@@ -1,8 +1,8 @@
-import { useContext } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { useContext, useState } from 'react';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   AppBar, Toolbar, Typography, Button,
-  Drawer, List, ListItem, ListItemText,
+  Drawer, List, ListItemButton, ListItemText,
   Box, CssBaseline
 } from '@mui/material';
 import { AuthContext } from '../context/AuthContext';
@@ -12,17 +12,16 @@ const drawerWidth = 240;
 const Layout = () => {
   const { usuario, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation(); // 👈 para saber la ruta actual
 
   const menuItems = {
     ADMIN: [
-      { text: 'Usuarios', path: '/usuarios' }
-      // Podés habilitar más rutas si querés:
-      // { text: 'Pacientes', path: '/pacientes' },
-      // { text: 'Turnos', path: '/turnos' }
+      { text: 'Administrar usuarios', path: '/usuarios' }
     ],
     RECEPCIONISTA: [
-      { text: 'Pacientes', path: '/pacientes' },
-      { text: 'Turnos', path: '/turnos' },
+      { text: 'Gestión Pacientes', path: '/pacientes' },
+      { text: 'Crear Turnos', path: '/turnos' },
+      { text: 'Gestionar Turnos', path: '/turnos/gestion' },
       { text: 'Historias clínicas', path: '/historias' }
     ],
     PROFESIONAL: [
@@ -57,13 +56,25 @@ const Layout = () => {
         <Toolbar />
         <List>
           {menuItems[usuario?.rol]?.map(item => (
-            <ListItem 
-              /* button */  // 👈 corregido: sin ={true}
-              key={item.text} 
+            <ListItemButton
+              key={item.text}
+              selected={location.pathname === item.path} // 👈 marca el activo
               onClick={() => navigate(item.path)}
+              sx={{
+                '&.Mui-selected': {
+                  backgroundColor: 'primary.main',
+                  color: 'white',
+                  '& .MuiListItemText-root': { color: 'white' }
+                },
+                '&:hover': {
+                  backgroundColor: 'primary.light',
+                  color: 'white',
+                  '& .MuiListItemText-root': { color: 'white' }
+                }
+              }}
             >
               <ListItemText primary={item.text} />
-            </ListItem>
+            </ListItemButton>
           ))}
         </List>
       </Drawer>

@@ -33,10 +33,13 @@ const Dashboard = () => {
         {usuario?.rol === 'RECEPCIONISTA' && (
           <>
             <Button variant="contained" onClick={() => navigate('/pacientes')}>
-              Ver pacientes
+              Gestión pacientes
             </Button>
             <Button variant="contained" onClick={() => navigate('/turnos')}>
-              Ver turnos
+              Crear turnos
+            </Button>
+            <Button variant="contained" onClick={() => navigate('/turnos/gestion')}>
+              Gestionar turnos
             </Button>
             <Button variant="contained" onClick={() => navigate('/historias')}>
               Ver historias clínicas

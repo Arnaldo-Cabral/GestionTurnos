@@ -1,4 +1,4 @@
-const { DataTypes } = require('sequelize');
+/* const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 const Usuario = require('./Usuario');
 
@@ -16,4 +16,32 @@ const Profesional = sequelize.define('Profesional', {
     timestamps: false
 });
 Profesional.belongsTo(Usuario, { foreignKey: 'usuario_id' });
+module.exports = Profesional;
+ */
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/db');
+
+const Profesional = sequelize.define('Profesional', {
+  id: {
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
+    primaryKey: true
+  },
+  usuario_id: {
+    type: DataTypes.INTEGER,
+    unique: true
+  },
+  especialidad: {
+    type: DataTypes.STRING(100),
+    allowNull: false
+  },
+  matricula: {
+    type: DataTypes.STRING(50),
+    allowNull: false
+  }
+}, {
+  tableName: 'profesionales',
+  timestamps: false
+});
+
 module.exports = Profesional;
