@@ -90,7 +90,6 @@ const GestionarTurno = () => {
               <TableCell><strong>Fecha</strong></TableCell>
               <TableCell><strong>Paciente</strong></TableCell>
               <TableCell><strong>Profesional</strong></TableCell>
-              {/* <TableCell><strong>Recepcionista</strong></TableCell> */}
               <TableCell><strong>Estado</strong></TableCell>
               <TableCell><strong>Acciones</strong></TableCell>
             </TableRow>
@@ -108,7 +107,6 @@ const GestionarTurno = () => {
                   <TableCell>{new Date(turno.fecha).toLocaleString()}</TableCell>
                   <TableCell>{turno.Paciente?.nombre} (DNI: {turno.Paciente?.dni})</TableCell>
                   <TableCell>{turno.Profesional?.Usuario?.nombre} ({turno.Profesional?.especialidad})</TableCell>
-                  {/* <TableCell>{turno.Recepcionista?.Usuario?.nombre || turno.Recepcionista?.nombre || 'Sin asignar'}</TableCell> */}
                   <TableCell>
                     <Select
                       value={turno.estado}
@@ -116,7 +114,6 @@ const GestionarTurno = () => {
                       size="small"
                     >
                       <MenuItem value="PENDIENTE">Pendiente</MenuItem>
-                      {/* <MenuItem value="CONFIRMADO">Confirmado</MenuItem> */}
                       <MenuItem value="REALIZADO">Confirmado</MenuItem>
                       <MenuItem value="CANCELADO">Cancelado</MenuItem>
                     </Select>

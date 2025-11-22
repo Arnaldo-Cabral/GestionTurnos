@@ -29,7 +29,7 @@ const Agenda = sequelize.define('Agenda', {
     defaultValue: true
   }
 }, {
-  tableName: 'agendas',   // 👈 nombre correcto de la tabla
+  tableName: 'agendas',   // nombre correcto de la tabla
   timestamps: false
 });
 

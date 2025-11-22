@@ -147,13 +147,6 @@ exports.getDisponibilidad = async (req, res) => {
     const diaSemana = new Date(fecha).toLocaleDateString('es-AR', { weekday: 'long' });
     const diaNormalizado = normalizarDia(diaSemana);
 
-    // 🔎 LOGS DE DEBUG
-    console.log('--- DEBUG getDisponibilidad ---');
-    console.log('profesional_id:', profesional_id);
-    console.log('fecha recibida:', fecha);
-    console.log('diaSemana:', diaSemana);
-    console.log('diaNormalizado:', diaNormalizado);
-
     // 1) Bloques de agenda activos para ese día (comparación insensible a mayúsculas)
     const pid = Number(profesional_id);
     const agenda = await Agenda.findAll({
@@ -167,18 +160,6 @@ exports.getDisponibilidad = async (req, res) => {
 
     // Filtramos manualmente por coincidencia insensible
     const agendaFiltrada = agenda.filter(a => a.dia_semana.toLowerCase() === diaNormalizado.toLowerCase());
-
-    console.log("Agenda raw rows count:", agenda.length);
-    console.log("Bloques de agenda encontrados:", agenda.map(a => ({
-      dia: a.dia_semana,
-      inicio: a.hora_inicio,
-      fin: a.hora_fin
-    })));
-    console.log("Bloques filtrados para el día:", agendaFiltrada.map(a => ({
-      dia: a.dia_semana,
-      inicio: a.hora_inicio,
-      fin: a.hora_fin
-    })));
 
     if (!agendaFiltrada || agendaFiltrada.length === 0) {
       return res.json({ fecha, disponibles: [] });
@@ -197,14 +178,11 @@ exports.getDisponibilidad = async (req, res) => {
       const [hIni] = bloque.hora_inicio.split(':').map(n => parseInt(n, 10));
       const [hFin] = bloque.hora_fin.split(':').map(n => parseInt(n, 10));
 
-      console.log(`Bloque de agenda: ${bloque.dia_semana} de ${bloque.hora_inicio} a ${bloque.hora_fin}`);
-
+      
       for (let h = hIni; h < hFin; h++) {
         if (!ocupadosHoras.includes(h)) {
           const horaStr = `${h.toString().padStart(2, '0')}:00`;
           const fechaCompleta = `${fecha}T${horaStr}:00`;
-
-          console.log(`Generando slot -> Día: ${bloque.dia_semana}, Hora: ${horaStr}, Fecha: ${fechaCompleta}`);
 
           disponibles.push({
             dia: bloque.dia_semana,

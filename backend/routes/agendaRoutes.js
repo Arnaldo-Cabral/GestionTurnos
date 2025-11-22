@@ -112,15 +112,6 @@ router.get('/disponibilidad', verifyToken, checkRole(['RECEPCIONISTA']), async (
       return res.status(400).json({ error: 'Faltan parámetros: profesional_id y fecha' });
     }
 
-    /* // Día de la semana de la fecha seleccionada
-    const diaSemana = new Date(fecha).toLocaleDateString('es-AR', { weekday: 'long' });
-    // Normalizar: primera letra mayúscula, resto minúscula
-    const diaNormalizado = diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1).toLowerCase();
-
-     // 🔎 Logs de depuración BORRARLOS LUEGO******
-    console.log("Fecha recibida:", fecha);
-    console.log("Día calculado con toLocaleDateString:", diaSemana);
-    console.log("Día normalizado:", diaNormalizado); */
     // Parsear fecha como local YYYY-MM-DD
     const [year, month, day] = fecha.split("-").map(Number);
     const fechaLocal = new Date(year, month - 1, day); // <-- mes empieza en 0

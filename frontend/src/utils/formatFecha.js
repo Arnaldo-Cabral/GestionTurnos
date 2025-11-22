@@ -1,7 +1,3 @@
-// src/utils/formatFecha.js
-
-//****PAra arreglar la fecha de la base de datos porque se muetra mal */
-
 export const formatFechaHoraLocal = (fechaUTC) => {
   if (!fechaUTC) return '';
 

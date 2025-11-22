@@ -26,7 +26,7 @@ const HistoriaClinica = sequelize.define('HistoriaClinica', {
     defaultValue: DataTypes.NOW
   }
 }, {
-  tableName: 'historiaclinicas', // 👈 nombre correcto de la tabla
+  tableName: 'historiaclinicas', // nombre correcto de la tabla
   timestamps: false
 });
 
