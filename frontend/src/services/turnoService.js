@@ -26,3 +26,8 @@ export const eliminarTurno = async (id) => {
 export const actualizarEstadoTurno = async (id, estado) => {
   return api.put(`/turnos/${id}/estado`, { estado });
 };
+
+// Obtener turnos pendientes de un profesional específico
+export const getTurnosPendientes = async (profesional_id) => {
+  return api.get(`/turnos/pendientes/${profesional_id}`);
+};

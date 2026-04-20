@@ -1,4 +1,5 @@
 const Usuario = require('../models/Usuario');
+const Profesional = require('../models/Profesional');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -22,12 +23,41 @@ exports.login = async (req, res) => {
     const match = await bcrypt.compare(password, usuario.password);
     if (!match) return res.status(401).json({ error: 'Contraseña incorrecta' });
 
+    // --- NUEVA LÓGICA PARA PROFESIONALES ---
+    let profesional_id = null;
+    if (usuario.rol === 'PROFESIONAL') {
+      const prof = await Profesional.findOne({ where: { usuario_id: usuario.id } });
+      if (prof) {
+        profesional_id = prof.id;
+      }
+    }
+    // ---------------------------------------
+
     const token = jwt.sign(
-      { id: usuario.id, nombre: usuario.nombre, rol: usuario.rol },
+      { 
+        id: usuario.id, 
+        nombre: usuario.nombre, 
+        rol: usuario.rol,
+        profesional_id: profesional_id // 👈 Agregamos el ID al token también
+      },
       process.env.JWT_SECRET,
-      { expiresIn: '1d' });
-    res.json({ token, usuario });
+      { expiresIn: '1d' }
+    );
+
+    // Devolvemos el usuario con el profesional_id incluido
+    res.json({ 
+      token, 
+      usuario: {
+        id: usuario.id,
+        nombre: usuario.nombre,
+        email: usuario.email,
+        rol: usuario.rol,
+        profesional_id: profesional_id // 👈 Esto es lo que React estaba esperando
+      } 
+    });
+
   } catch (error) {
+    console.error("Error en login:", error);
     res.status(500).json({ error: error.message });
   }
 };

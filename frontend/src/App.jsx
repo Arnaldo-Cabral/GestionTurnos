@@ -9,6 +9,7 @@ import Historias from './pages/Historias';
 import Login from './pages/Login';
 import Agenda from './pages/Agenda';
 import GestionarTurno from './pages/GestionarTurno';
+import MisTurnos from './pages/MisTurnos';
 
 
 function App() {
@@ -37,6 +38,10 @@ function App() {
         <Route path="/agenda" element={
           <PrivateRoute roles={['PROFESIONAL']}><Agenda /></PrivateRoute>
         } />
+        <Route
+          path="/mis-turnos" element={
+            <PrivateRoute roles={['PROFESIONAL']}><MisTurnos /></PrivateRoute>
+          }/>
       </Route>
     </Routes>
   );
