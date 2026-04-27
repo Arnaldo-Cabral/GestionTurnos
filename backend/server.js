@@ -25,7 +25,7 @@ setupAssociations();
 
 
 // PASO 2: Sincronizamos la base de datos (una vez que todas las relaciones están definidas)
-sequelize.sync({ alter: true }).then(() => {
+sequelize.sync({ alter: false }).then(() => {
   
   // PASO 3: Iniciamos el servidor
   app.listen(PORT, () => {

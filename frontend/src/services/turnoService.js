@@ -31,3 +31,9 @@ export const actualizarEstadoTurno = async (id, estado) => {
 export const getTurnosPendientes = async (profesional_id) => {
   return api.get(`/turnos/pendientes/${profesional_id}`);
 };
+
+// ✅ NUEVO: Registrar atención (Historia Clínica + Cambio de Estado)
+export const atenderTurnoAPI = async (id, datosAtencion) => {
+  // datosAtencion debe ser un objeto: { diagnostico, tratamiento, observaciones }
+  return api.post(`/turnos/${id}/atender`, datosAtencion);
+};

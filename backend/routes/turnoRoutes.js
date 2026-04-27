@@ -32,4 +32,10 @@ router.put('/:id/estado', verifyToken, checkRole(['RECEPCIONISTA']), turnoContro
 router.get('/disponibilidad', verifyToken, checkRole(['RECEPCIONISTA']), turnoController.getDisponibilidad);
 router.get('/pendientes/:profesional_id', verifyToken, checkRole(['PROFESIONAL']), turnoController.getPendientesPorProfesional);
 
+// Ruta para que el profesional atienda el turno
+router.post('/:id/atender', verifyToken, checkRole(['PROFESIONAL']), turnoController.atenderTurno);
+
+// Ruta para ver historial completo del paciente
+router.get('/paciente/:paciente_id/historial', verifyToken, checkRole(['PROFESIONAL']), turnoController.getHistorialPaciente);
+
 module.exports = router;

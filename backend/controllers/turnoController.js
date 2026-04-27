@@ -1,9 +1,11 @@
 const { Op } = require('sequelize');
+const sequelize = require('../config/db'); // 👈 AGREGÁ ESTA LÍNEA (verificá que la ruta sea correcta)
 const Turno = require('../models/Turno');
 const Paciente = require('../models/Paciente');
 const Profesional = require('../models/Profesional');
 const Recepcionista = require('../models/Recepcionista');
 const Usuario = require('../models/Usuario'); // 👈 IMPORTANTE: Necesario para el nombre del médico
+const HistoriaClinica = require('../models/HistoriaClinica'); // para menejar el turno
 
 // ====================================================================
 // CREATE: Crear un nuevo turno
@@ -193,5 +195,81 @@ exports.getPendientesPorProfesional = async (req, res) => {
     res.json(turnos);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+// ====================================================================
+// CONTROLA LOS TURNOS DEL PROFESIONAL
+// ====================================================================
+
+exports.atenderTurno = async (req, res) => {
+  const { id } = req.params; // ID del turno
+  const { diagnostico, tratamiento, observaciones } = req.body;
+
+  try {
+    // Usamos una transacción para que se hagan ambas cosas o ninguna
+    await sequelize.transaction(async (t) => {
+      // 1. Crear la historia clínica
+      await HistoriaClinica.create({
+        turno_id: id,
+        diagnostico,
+        tratamiento,
+        observaciones
+      }, { transaction: t });
+
+      // 2. Actualizar el estado del turno
+      const turno = await Turno.findByPk(id);
+      turno.estado = 'REALIZADO';
+      await turno.save({ transaction: t });
+    });
+
+    res.json({ mensaje: 'Atención registrada y turno finalizado.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al registrar la atención: ' + error.message });
+  }
+};
+// ====================================================================
+// OBTENER HISTORIAL COMPLETO DE UN PACIENTE
+// ====================================================================
+exports.getHistorialPaciente = async (req, res) => {
+  try {
+    const { paciente_id } = req.params;
+    
+    // 1. Buscamos los turnos (Usamos el nombre de columna 'id' que está en tu SQL)
+    const turnosDelPaciente = await Turno.findAll({
+      where: { paciente_id },
+      attributes: ['id']
+    });
+
+    if (turnosDelPaciente.length === 0) {
+      return res.json([]);
+    }
+
+    const idsTurnos = turnosDelPaciente.map(t => t.id);
+
+    // 2. Buscamos las historias clínicas
+    const historial = await HistoriaClinica.findAll({
+      where: {
+        turno_id: { [Op.in]: idsTurnos }
+      },
+      include: [
+        { 
+          model: Turno, 
+          required: false, // Evita que se rompa por las múltiples constraints del SQL
+          include: [{ 
+            model: Profesional, 
+            include: [{ model: Usuario, attributes: ['nombre'] }] 
+          }] 
+        }
+      ],
+      // CAMBIO CLAVE: Usamos 'id' o 'fecha_registro' porque 'createdAt' NO existe en tu SQL
+      order: [['id', 'DESC']] 
+    });
+
+    console.log(`🔎 Paciente ${paciente_id}: ${historial.length} registros encontrados.`);
+    res.json(historial);
+  } catch (error) {
+    console.error("❌ Error detallado en el Backend:", error);
+    res.status(500).json({ error: 'Error en la consulta: ' + error.message });
   }
 };

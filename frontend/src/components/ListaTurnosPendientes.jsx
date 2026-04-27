@@ -1,100 +1,142 @@
-/* import { useState, useEffect, useContext } from 'react';
-import { getTurnosPendientes } from '../services/turnoService';
-import { AuthContext } from '../context/AuthContext';
-import { List, ListItem, ListItemText, Typography, Paper } from '@mui/material';
-
-const ListaTurnosPendientes = () => {
-  const [turnos, setTurnos] = useState([]);
-  const { usuario } = useContext(AuthContext);
-
-  useEffect(() => {
-    // IMPORTANTE: Asegurate de que usuario.profesional_id venga en el token/contexto
-    // Si no, tendrás que hacer un fetch previo para obtener el ID de profesional
-    if (usuario?.profesional_id) {
-      getTurnosPendientes(usuario.profesional_id)
-        .then(res => setTurnos(res.data))
-        .catch(err => console.error("Error al traer turnos", err));
-    }
-  }, [usuario]);
-
-  return (
-    <Paper sx={{ p: 2, mt: 2 }}>
-      <Typography variant="h6">Mis Turnos Pendientes</Typography>
-      <List>
-        {turnos.length > 0 ? turnos.map(turno => (
-          <ListItem key={turno.id} divider>
-            <ListItemText 
-              primary={`Paciente: ${turno.Paciente?.nombre}`} 
-              secondary={`Fecha: ${new Date(turno.fecha).toLocaleString()} - DNI: ${turno.Paciente?.dni}`}
-            />
-          </ListItem>
-        )) : (
-          <Typography variant="body2">No tienes turnos pendientes.</Typography>
-        )}
-      </List>
-    </Paper>
-  );
-};
-export default ListaTurnosPendientes; */
 import { useState, useEffect, useContext } from 'react';
-import { getTurnosPendientes } from '../services/turnoService';
+import { getTurnosPendientes, atenderTurnoAPI } from '../services/turnoService';
 import { AuthContext } from '../context/AuthContext';
-import { List, ListItem, ListItemText, Typography, Paper, Alert } from '@mui/material';
+import api from '../services/api'; // Importamos api para la consulta rápida
+import { 
+  List, ListItem, ListItemText, Typography, Paper, Alert, 
+  Button, Dialog, DialogTitle, DialogContent, TextField, DialogActions,
+  Accordion, AccordionSummary, AccordionDetails, Divider
+} from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 const ListaTurnosPendientes = () => {
   const [turnos, setTurnos] = useState([]);
+  const [historialPrevio, setHistorialPrevio] = useState([]);
   const [errorInfo, setErrorInfo] = useState('');
   const { usuario } = useContext(AuthContext);
 
-  useEffect(() => {
-    // 1. Verificamos si el objeto usuario existe y qué tiene
-    if (!usuario) {
-      setErrorInfo('No hay información de usuario logueado.');
-      return;
-    }
+  const [open, setOpen] = useState(false);
+  const [turnoSeleccionado, setTurnoSeleccionado] = useState(null);
+  const [formAtencion, setFormAtencion] = useState({ diagnostico: '', tratamiento: '', observaciones: '' });
 
-    if (!usuario.profesional_id) {
-      setErrorInfo(`Logueado como ${usuario.rol}, pero NO existe profesional_id en el sistema.`);
-      return;
+  const cargarTurnos = () => {
+    if (usuario?.profesional_id) {
+      getTurnosPendientes(usuario.profesional_id)
+        .then(res => {
+          setTurnos(Array.isArray(res.data) ? res.data : []);
+          setErrorInfo(res.data.length === 0 ? 'No hay turnos para hoy.' : '');
+        })
+        .catch(() => setErrorInfo('Error al conectar con el servidor.'));
     }
+  };
 
-    // 2. Si llegamos acá, intentamos llamar a la API
-    getTurnosPendientes(usuario.profesional_id)
-      .then(res => {
-        console.log("Datos recibidos:", res.data);
-        setTurnos(res.data);
-        if (res.data.length === 0) {
-          setErrorInfo('La base de datos respondió, pero no hay turnos PENDIENTES para este ID.');
-        } else {
-          setErrorInfo(''); // Limpiamos errores si hay datos
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        setErrorInfo('Error de conexión: El backend no responde o la ruta no existe.');
-      });
-  }, [usuario]);
+  useEffect(() => { cargarTurnos(); }, [usuario]);
+
+  const handleAtenderClick = async (turno) => {
+    setTurnoSeleccionado(turno);
+    setHistorialPrevio([]); // Limpiar historial anterior
+    
+    // 🔍 Buscar historial del paciente antes de abrir
+    try {
+      const res = await api.get(`/turnos/paciente/${turno.paciente_id}/historial`);
+      setHistorialPrevio(res.data);
+    } catch (err) {
+      console.error("No se pudo cargar el historial previo");
+    }
+    
+    setOpen(true);
+  };
+
+  const handleConfirmarAtencion = async () => {
+    try {
+      await atenderTurnoAPI(turnoSeleccionado.id, formAtencion);
+      setOpen(false);
+      setFormAtencion({ diagnostico: '', tratamiento: '', observaciones: '' });
+      cargarTurnos();
+    } catch (error) {
+      alert("Error al guardar la atención");
+    }
+  };
 
   return (
     <Paper sx={{ p: 2, mt: 2 }}>
-      <Typography variant="h6">Estado de la consulta:</Typography>
-      
-      {/* Este cartel nos dirá la verdad */}
+      <Typography variant="h6" gutterBottom>Próximos Pacientes</Typography>
       {errorInfo && <Alert severity="info" sx={{ mb: 2 }}>{errorInfo}</Alert>}
-
-      <Typography variant="h6">Lista de Turnos:</Typography>
+      
       <List>
-        {turnos.length > 0 ? turnos.map(turno => (
-          <ListItem key={turno.id} divider>
+        {turnos.map(turno => (
+          <ListItem 
+            key={turno.id} 
+            divider
+            secondaryAction={
+              <Button variant="contained" color="success" onClick={() => handleAtenderClick(turno)}>
+                Atender
+              </Button>
+            }
+          >
             <ListItemText 
-              primary={`Paciente: ${turno.Paciente?.nombre || 'Sin nombre'}`} 
-              secondary={`Fecha: ${new Date(turno.fecha).toLocaleString()}`}
+              primary={turno.Paciente?.nombre || 'Paciente desconocido'} 
+              secondary={`DNI: ${turno.Paciente?.dni} | Turno #${turno.id}`} 
             />
           </ListItem>
-        )) : (
-          <Typography variant="body2">Sin resultados para mostrar.</Typography>
-        )}
+        ))}
       </List>
+
+      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="md">
+        <DialogTitle sx={{ bgcolor: 'primary.main', color: 'white' }}>
+          Atención Médica: {turnoSeleccionado?.Paciente?.nombre}
+        </DialogTitle>
+        <DialogContent dividers>
+          
+          {/* --- SECCIÓN DE HISTORIAL --- */}
+          <Typography variant="h6" color="primary" gutterBottom>Historial Clínico Previo</Typography>
+          {historialPrevio.length > 0 ? (
+            historialPrevio.map((h) => (
+              <Accordion key={h.id} sx={{ mb: 1, bgcolor: '#f9f9f9' }}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography><strong>Fecha:</strong> {new Date(h.createdAt).toLocaleDateString()} - <strong>Dr/a:</strong> {h.Turno?.Profesional?.Usuario?.nombre}</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Typography variant="body2"><strong>Diagnóstico:</strong> {h.diagnostico}</Typography>
+                  <Typography variant="body2"><strong>Tratamiento:</strong> {h.tratamiento}</Typography>
+                  <Typography variant="body2"><strong>Observaciones:</strong> {h.observaciones}</Typography>
+                </AccordionDetails>
+              </Accordion>
+            ))
+          ) : (
+            <Alert severity="info" sx={{ mb: 2 }}>El paciente no registra atenciones previas.</Alert>
+          )}
+
+          <Divider sx={{ my: 3 }} />
+
+          {/* --- FORMULARIO DE NUEVA ATENCIÓN --- */}
+          <Typography variant="h6" color="secondary" gutterBottom>Nueva Entrada (Hoy)</Typography>
+          <TextField
+            label="Diagnóstico Actual"
+            fullWidth multiline rows={3} margin="normal"
+            value={formAtencion.diagnostico}
+            onChange={(e) => setFormAtencion({...formAtencion, diagnostico: e.target.value})}
+          />
+          <TextField
+            label="Tratamiento / Indicaciones"
+            fullWidth multiline rows={3} margin="normal"
+            value={formAtencion.tratamiento}
+            onChange={(e) => setFormAtencion({...formAtencion, tratamiento: e.target.value})}
+          />
+          <TextField
+            label="Observaciones Internas"
+            fullWidth multiline rows={2} margin="normal"
+            value={formAtencion.observaciones}
+            onChange={(e) => setFormAtencion({...formAtencion, observaciones: e.target.value})}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpen(false)} color="inherit">Cancelar</Button>
+          <Button onClick={handleConfirmarAtencion} variant="contained" color="primary">
+            Finalizar y Guardar Atención
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Paper>
   );
 };
