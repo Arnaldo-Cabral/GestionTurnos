@@ -189,7 +189,15 @@ exports.getPendientesPorProfesional = async (req, res) => {
     const { profesional_id } = req.params;
     const turnos = await Turno.findAll({
       where: { profesional_id, estado: 'PENDIENTE' },
-      include: [{ model: Paciente, attributes: ['nombre', 'dni', 'telefono'] }],
+      // 👈 AGREGAMOS 'fecha' aquí para que el frontend pueda mostrar la hora
+      attributes: ['id', 'fecha', 'estado'],
+      include: [
+        {
+          model: Paciente,
+          attributes: ['id', 'nombre', 'dni', 'telefono']
+        }
+      ],
+      // Mantenemos el orden cronológico (el más temprano primero)
       order: [['fecha', 'ASC']]
     });
     res.json(turnos);
@@ -234,13 +242,61 @@ exports.atenderTurno = async (req, res) => {
 exports.getHistorialPaciente = async (req, res) => {
   try {
     const { paciente_id } = req.params;
-    
+    console.log("🔍 TIPO DE DATO paciente_id:", typeof paciente_id, "VALOR:", paciente_id);
+
+    // 1. Buscamos manualmente todos los IDs de turnos que pertenecen a ese paciente
+    const turnos = await Turno.findAll({
+      where: { paciente_id: paciente_id },
+      attributes: ['id'],
+      raw: true // Esto nos devuelve un array simple de objetos
+    });
+
+    if (!turnos || turnos.length === 0) {
+      console.log("⚠️ No se encontraron turnos para este paciente.");
+      return res.json([]);
+    }
+
+    const idsTurnos = turnos.map(t => t.id);
+    console.log("🔍 PASO 2: IDs de turnos encontrados:", idsTurnos);
+
+    // 2. Buscamos las historias clínicas que correspondan a esos IDs de turnos
+    const historial = await HistoriaClinica.findAll({
+      where: {
+        turno_id: idsTurnos // Sequelize usará un "WHERE turno_id IN (...)"
+      },
+      include: [
+        {
+          model: Turno,
+          include: [{
+            model: Profesional,
+            include: [{ model: Usuario, attributes: ['nombre'] }]
+          }]
+        }
+      ],
+      order: [['id', 'DESC']]
+    });
+
+    console.log(`✅ PASO 3: Historias encontradas: ${historial.length}`);
+    res.json(historial);
+
+  } catch (error) {
+    console.error("❌ Error Crítico en el Historial:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+//====================================================================
+// OBTENER HISTORIAL COMPLETO DE UN PACIENTE (SI FUNCIONABA)
+// =================================================== =================
+
+/* exports.getHistorialPaciente = async (req, res) => {
+  try {
+    const { paciente_id } = req.params;
     // 1. Buscamos los turnos (Usamos el nombre de columna 'id' que está en tu SQL)
     const turnosDelPaciente = await Turno.findAll({
       where: { paciente_id },
       attributes: ['id']
     });
-
     if (turnosDelPaciente.length === 0) {
       return res.json([]);
     }
@@ -248,22 +304,26 @@ exports.getHistorialPaciente = async (req, res) => {
     const idsTurnos = turnosDelPaciente.map(t => t.id);
 
     // 2. Buscamos las historias clínicas
+
     const historial = await HistoriaClinica.findAll({
       where: {
         turno_id: { [Op.in]: idsTurnos }
       },
+
       include: [
-        { 
-          model: Turno, 
+        {
+          model: Turno,
           required: false, // Evita que se rompa por las múltiples constraints del SQL
-          include: [{ 
-            model: Profesional, 
-            include: [{ model: Usuario, attributes: ['nombre'] }] 
-          }] 
+          include: [{
+            model: Profesional,
+            include: [{ model: Usuario, attributes: ['nombre'] }]
+          }]
         }
       ],
+
       // CAMBIO CLAVE: Usamos 'id' o 'fecha_registro' porque 'createdAt' NO existe en tu SQL
-      order: [['id', 'DESC']] 
+
+      order: [['id', 'DESC']]
     });
 
     console.log(`🔎 Paciente ${paciente_id}: ${historial.length} registros encontrados.`);
@@ -272,4 +332,4 @@ exports.getHistorialPaciente = async (req, res) => {
     console.error("❌ Error detallado en el Backend:", error);
     res.status(500).json({ error: 'Error en la consulta: ' + error.message });
   }
-};
+}; */

@@ -10,7 +10,7 @@ const Paciente = sequelize.define('Paciente', {
   direccion: { type: DataTypes.STRING(255) }
 }, {
   sequelize,
-  tableName: 'Pacientes',
+  tableName: 'pacientes',
   timestamps: false
 });
 

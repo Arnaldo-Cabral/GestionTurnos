@@ -2,8 +2,8 @@ import { useState, useEffect, useContext } from 'react';
 import { getTurnosPendientes, atenderTurnoAPI } from '../services/turnoService';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api'; // Importamos api para la consulta rápida
-import { 
-  List, ListItem, ListItemText, Typography, Paper, Alert, 
+import {
+  List, ListItem, ListItemText, Typography, Paper, Alert,
   Button, Dialog, DialogTitle, DialogContent, TextField, DialogActions,
   Accordion, AccordionSummary, AccordionDetails, Divider
 } from '@mui/material';
@@ -19,6 +19,15 @@ const ListaTurnosPendientes = () => {
   const [turnoSeleccionado, setTurnoSeleccionado] = useState(null);
   const [formAtencion, setFormAtencion] = useState({ diagnostico: '', tratamiento: '', observaciones: '' });
 
+  // Función auxiliar para formatear la fecha y hora
+  const formatearFecha = (fechaISO) => {
+    const fecha = new Date(fechaISO);
+    return {
+      dia: fecha.toLocaleDateString('es-AR'),
+      hora: fecha.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+    };
+  };
+
   const cargarTurnos = () => {
     if (usuario?.profesional_id) {
       getTurnosPendientes(usuario.profesional_id)
@@ -31,11 +40,12 @@ const ListaTurnosPendientes = () => {
   };
 
   useEffect(() => { cargarTurnos(); }, [usuario]);
+  
 
-  const handleAtenderClick = async (turno) => {
+  /* const handleAtenderClick = async (turno) => {
     setTurnoSeleccionado(turno);
     setHistorialPrevio([]); // Limpiar historial anterior
-    
+
     // 🔍 Buscar historial del paciente antes de abrir
     try {
       const res = await api.get(`/turnos/paciente/${turno.paciente_id}/historial`);
@@ -43,7 +53,35 @@ const ListaTurnosPendientes = () => {
     } catch (err) {
       console.error("No se pudo cargar el historial previo");
     }
-    
+
+    setOpen(true);
+  }; */
+  const handleAtenderClick = async (turno) => {
+    // 🔍 Paso 1: Log para ver qué datos tiene el objeto en realidad
+    console.log("Datos del turno:", turno);
+
+    setTurnoSeleccionado(turno);
+    setHistorialPrevio([]); 
+
+    // 🔍 Paso 2: Intentamos obtener el ID del paciente de varias formas
+    const idPaciente = turno.paciente_id || turno.Paciente?.id;
+
+    console.log("🔍 Enviando ID al backend:", idPaciente);
+
+    if (!idPaciente) {
+      console.error("❌ No se encontró el paciente_id en el objeto turno");
+      setOpen(true); // Abrimos igual para atender, aunque no haya historial
+      return;
+    }
+
+    try {
+      // Usamos el ID que detectamos arriba
+      const res = await api.get(`/turnos/paciente/${idPaciente}/historial`);
+      setHistorialPrevio(res.data);
+    } catch (err) {
+      console.error("No se pudo cargar el historial previo", err);
+    }
+
     setOpen(true);
   };
 
@@ -62,24 +100,41 @@ const ListaTurnosPendientes = () => {
     <Paper sx={{ p: 2, mt: 2 }}>
       <Typography variant="h6" gutterBottom>Próximos Pacientes</Typography>
       {errorInfo && <Alert severity="info" sx={{ mb: 2 }}>{errorInfo}</Alert>}
-      
+
       <List>
-        {turnos.map(turno => (
-          <ListItem 
-            key={turno.id} 
-            divider
-            secondaryAction={
-              <Button variant="contained" color="success" onClick={() => handleAtenderClick(turno)}>
-                Atender
-              </Button>
-            }
-          >
-            <ListItemText 
-              primary={turno.Paciente?.nombre || 'Paciente desconocido'} 
-              secondary={`DNI: ${turno.Paciente?.dni} | Turno #${turno.id}`} 
-            />
-          </ListItem>
-        ))}
+        {turnos.map(turno => {
+          const { dia, hora } = formatearFecha(turno.fecha); // Extraemos hora y día
+
+          return (
+            <ListItem
+              key={turno.id}
+              divider
+              secondaryAction={
+                <Button variant="contained" color="success" onClick={() => handleAtenderClick(turno)}>
+                  Atender
+                </Button>
+              }
+            >
+              <ListItemText
+                primary={
+                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                    {hora} hs — {turno.Paciente?.nombre || 'Paciente desconocido'}
+                  </Typography>
+                }
+                secondary={
+                  <>
+                    <Typography variant="body2" component="span" display="block">
+                      Fecha: {dia} | DNI: {turno.Paciente?.dni}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      ID Turno: #{turno.id} | Estado: {turno.estado}
+                    </Typography>
+                  </>
+                }
+              />
+            </ListItem>
+          );
+        })}
       </List>
 
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="md">
@@ -87,14 +142,17 @@ const ListaTurnosPendientes = () => {
           Atención Médica: {turnoSeleccionado?.Paciente?.nombre}
         </DialogTitle>
         <DialogContent dividers>
-          
+
           {/* --- SECCIÓN DE HISTORIAL --- */}
           <Typography variant="h6" color="primary" gutterBottom>Historial Clínico Previo</Typography>
           {historialPrevio.length > 0 ? (
             historialPrevio.map((h) => (
               <Accordion key={h.id} sx={{ mb: 1, bgcolor: '#f9f9f9' }}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography><strong>Fecha:</strong> {new Date(h.createdAt).toLocaleDateString()} - <strong>Dr/a:</strong> {h.Turno?.Profesional?.Usuario?.nombre}</Typography>
+                  <Typography>
+                    <strong>Fecha:</strong> {new Date(h.fecha_registro).toLocaleDateString()} -
+                    <strong> Dr/a:</strong> {h.Turno?.Profesional?.Usuario?.nombre || 'No asignado'}
+                  </Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   <Typography variant="body2"><strong>Diagnóstico:</strong> {h.diagnostico}</Typography>
@@ -115,19 +173,19 @@ const ListaTurnosPendientes = () => {
             label="Diagnóstico Actual"
             fullWidth multiline rows={3} margin="normal"
             value={formAtencion.diagnostico}
-            onChange={(e) => setFormAtencion({...formAtencion, diagnostico: e.target.value})}
+            onChange={(e) => setFormAtencion({ ...formAtencion, diagnostico: e.target.value })}
           />
           <TextField
             label="Tratamiento / Indicaciones"
             fullWidth multiline rows={3} margin="normal"
             value={formAtencion.tratamiento}
-            onChange={(e) => setFormAtencion({...formAtencion, tratamiento: e.target.value})}
+            onChange={(e) => setFormAtencion({ ...formAtencion, tratamiento: e.target.value })}
           />
           <TextField
             label="Observaciones Internas"
             fullWidth multiline rows={2} margin="normal"
             value={formAtencion.observaciones}
-            onChange={(e) => setFormAtencion({...formAtencion, observaciones: e.target.value})}
+            onChange={(e) => setFormAtencion({ ...formAtencion, observaciones: e.target.value })}
           />
         </DialogContent>
         <DialogActions>

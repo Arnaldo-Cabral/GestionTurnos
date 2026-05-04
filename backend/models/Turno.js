@@ -10,10 +10,17 @@ const Turno = sequelize.define('Turno', {
   profesional_id: { type: DataTypes.INTEGER },
   recepcionista_id: { type: DataTypes.INTEGER },
   fecha: { type: DataTypes.DATE, allowNull: false },
-  /*estado: { type: DataTypes.ENUM('PENDIENTE', 'CONFRIMADO', 'CANCELADO'), defaultValue: 'PENDIENTE' }*/ 
-  estado: { type: DataTypes.ENUM('PENDIENTE', 'REALIZADO', 'CANCELADO'), defaultValue: 'PENDIENTE' }
+  estado: { 
+    type: DataTypes.ENUM('PENDIENTE', 'REALIZADO', 'CANCELADO'), 
+    defaultValue: 'PENDIENTE' 
+  }
+}, {
+  tableName: 'turnos',
+  timestamps: true // En esta tabla SÍ existen según tu SQL
 });
+
 Turno.belongsTo(Paciente, { foreignKey: 'paciente_id' });
 Turno.belongsTo(Profesional, { foreignKey: 'profesional_id' });
 Turno.belongsTo(Recepcionista, { foreignKey: 'recepcionista_id' });
+
 module.exports = Turno;
