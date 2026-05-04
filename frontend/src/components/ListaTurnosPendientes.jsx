@@ -41,21 +41,6 @@ const ListaTurnosPendientes = () => {
 
   useEffect(() => { cargarTurnos(); }, [usuario]);
   
-
-  /* const handleAtenderClick = async (turno) => {
-    setTurnoSeleccionado(turno);
-    setHistorialPrevio([]); // Limpiar historial anterior
-
-    // 🔍 Buscar historial del paciente antes de abrir
-    try {
-      const res = await api.get(`/turnos/paciente/${turno.paciente_id}/historial`);
-      setHistorialPrevio(res.data);
-    } catch (err) {
-      console.error("No se pudo cargar el historial previo");
-    }
-
-    setOpen(true);
-  }; */
   const handleAtenderClick = async (turno) => {
     // 🔍 Paso 1: Log para ver qué datos tiene el objeto en realidad
     console.log("Datos del turno:", turno);

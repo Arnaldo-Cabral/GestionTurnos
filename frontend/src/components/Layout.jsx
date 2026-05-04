@@ -25,8 +25,9 @@ const Layout = () => {
       { text: 'Historias clínicas', path: '/historias' }
     ],
     PROFESIONAL: [
+      { text: 'Proximos turnos', path: '/mis-turnos' },
       { text: 'Historias clínicas', path: '/historias' },
-      { text: 'Agenda', path: '/agenda' }
+      { text: 'Mi agenda', path: '/agenda' }
     ]
   };
 

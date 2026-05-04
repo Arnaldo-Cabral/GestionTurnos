@@ -3,7 +3,7 @@ import { Container, Typography, Button, Stack, Box, Divider } from '@mui/materia
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 // Importamos el componente de lista que creamos antes
-import ListaTurnosPendientes from '../components/ListaTurnosPendientes'; 
+import ListaTurnosPendientes from '../components/ListaTurnosPendientes';
 
 const Dashboard = () => {
   const { usuario, logout } = useContext(AuthContext);
@@ -45,12 +45,12 @@ const Dashboard = () => {
         {usuario?.rol === 'PROFESIONAL' && (
           <>
             {/* Agregamos el botón para ir a la página completa de turnos */}
-            <Button 
-              variant="contained" 
-              color="secondary" 
+            <Button
+              variant="contained"
+              color="secondary"
               onClick={() => navigate('/mis-turnos')}
             >
-              Ver mi agenda completa
+              Ver próximos turnos
             </Button>
 
             <Button variant="contained" onClick={() => navigate('/historias')}>

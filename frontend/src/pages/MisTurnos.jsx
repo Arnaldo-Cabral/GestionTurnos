@@ -5,7 +5,7 @@ const MisTurnos = () => {
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom>
-        Agenda de Turnos
+        Proximos Turnos
       </Typography>
       <Box sx={{ mt: 3 }}>
         <ListaTurnosPendientes />
