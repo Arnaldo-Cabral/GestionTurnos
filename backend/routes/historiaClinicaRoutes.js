@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const historiaClinicaController = require('../controllers/historiaClinicaController');
-const { verifyToken, checkRole } = require('../middlewares/auth');
+//const { verifyToken, checkRole } = require('../middlewares/auth');
 
 // RECEPCIONISTA y PROFESIONAL pueden consultar por seguridad se pone rol
 router.get('/buscar', verifyToken, checkRole(['RECEPCIONISTA', 'PROFESIONAL']), historiaClinicaController.getByPaciente);
