@@ -1,7 +1,5 @@
 const { Op } = require('sequelize');
-const Paciente = require('../models/Paciente');
-const Profesional = require('../models/Profesional');
-const Usuario = require('../models/Usuario'); */
+const { HistoriaClinica, Turno, Paciente, Profesional, Usuario } = require('../models');
 
 // Nuevo método para buscar historial por DNI o Nombre del paciente
 exports.getByPaciente = async (req, res) => {
