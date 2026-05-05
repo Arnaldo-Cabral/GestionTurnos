@@ -1,5 +1,10 @@
 const { Op } = require('sequelize');
+//const HistoriaClinica = require('../models/HistoriaClinica');
 const { HistoriaClinica, Turno, Paciente, Profesional, Usuario } = require('../models');
+/* const Turno = require('../models/Turno');
+const Paciente = require('../models/Paciente');
+const Profesional = require('../models/Profesional');
+const Usuario = require('../models/Usuario'); */
 
 // Nuevo método para buscar historial por DNI o Nombre del paciente
 exports.getByPaciente = async (req, res) => {
@@ -40,6 +45,45 @@ exports.getByPaciente = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+/* exports.getByPaciente = async (req, res) => {
+  const { query } = req.query;
+  try {
+    if (!query) return res.json([]);
+
+    const historias = await HistoriaClinica.findAll({
+      include: [{
+        model: Turno,
+        required: true,
+        include: [
+          {
+            model: Paciente,
+            required: true,
+            where: {
+              [Op.or]: [
+                { dni: { [Op.like]: `%${query}%` } },
+                { nombre: { [Op.like]: `%${query}%` } }
+              ]
+            }
+          },
+          {
+            model: Profesional,
+            required: false, // Usamos false para que si no hay profesional, igual traiga la historia
+            include: [{ 
+                model: Usuario, 
+                attributes: ['nombre'] 
+            }] 
+          }
+        ]
+      }],
+      order: [['fecha_registro', 'DESC']]
+    });
+    
+    res.json(historias);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}; */
 
 exports.getById = async (req, res) => {
   try {
