@@ -22,7 +22,7 @@ const Layout = () => {
       { text: 'Gestión Pacientes', path: '/pacientes' },
       { text: 'Crear Turnos', path: '/turnos' },
       { text: 'Gestionar Turnos', path: '/turnos/gestion' },
-      { text: 'Historias clínicas', path: '/historias' }
+      { text: 'Historial de Turnos', path: '/historias' }
     ],
     PROFESIONAL: [
       { text: 'Proximos turnos', path: '/mis-turnos' },
