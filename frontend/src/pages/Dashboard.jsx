@@ -36,7 +36,7 @@ const Dashboard = () => {
               Gestionar turnos
             </Button>
             <Button variant="contained" onClick={() => navigate('/historias')}>
-              Ver historias clínicas
+              Historial de turnos
             </Button>
           </>
         )}
@@ -54,10 +54,10 @@ const Dashboard = () => {
             </Button>
 
             <Button variant="contained" onClick={() => navigate('/historias')}>
-              Gestionar historias clínicas
+              Consultar historias clínicas
             </Button>
             <Button variant="contained" onClick={() => navigate('/agenda')}>
-              Cargar agenda de atención
+              Cargar mi agenda de atención
             </Button>
 
             {/* SECCIÓN NUEVA: Vista rápida de turnos pendientes directamente en el Dashboard */}
