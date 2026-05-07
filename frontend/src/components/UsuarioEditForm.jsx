@@ -12,10 +12,24 @@ const UsuarioEditForm = ({ usuario, onUsuarioActualizado, onCancelar }) => {
     rol: '',
     activo: true,
     especialidad: '',
-    matricula: ''
+    matricula: '',
+    intervalo: 20 // 👈 NUEVO: Valor inicial por defecto
   });
 
   useEffect(() => {
+    setForm({
+      nombre: usuario.nombre || '',
+      email: usuario.email || '',
+      password: '', // Siempre vacía para no mostrar el hash
+      rol: usuario.rol || '',
+      activo: usuario.activo,
+      // Accedemos al objeto Profesional que viene de la DB
+      especialidad: usuario.Profesional?.especialidad || '',
+      matricula: usuario.Profesional?.matricula || '',
+      intervalo: usuario.Profesional?.intervalo || 20
+    });
+  }, [usuario]);
+  /* useEffect(() => {
     setForm({
       nombre: usuario.nombre,
       email: usuario.email,
@@ -23,9 +37,10 @@ const UsuarioEditForm = ({ usuario, onUsuarioActualizado, onCancelar }) => {
       rol: usuario.rol,
       activo: usuario.activo,
       especialidad: usuario.especialidad || '',
-      matricula: usuario.matricula || ''
+      matricula: usuario.matricula || '',
+      intervalo: usuario.intervalo || 20 // 👈 NUEVO: Cargamos el valor que ya tiene en la DB
     });
-  }, [usuario]);
+  }, [usuario]); */
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -49,6 +64,7 @@ const UsuarioEditForm = ({ usuario, onUsuarioActualizado, onCancelar }) => {
       if (form.rol === 'PROFESIONAL') {
         payload.especialidad = form.especialidad;
         payload.matricula = form.matricula;
+        payload.intervalo = form.intervalo; // 👈 NUEVO: Se envía al backend para actualizar
       }
 
       const res = await api.put(`/usuarios/${usuario.id}`, payload);
@@ -63,7 +79,7 @@ const UsuarioEditForm = ({ usuario, onUsuarioActualizado, onCancelar }) => {
       <Stack spacing={2} sx={{ mt: 2 }}>
         <TextField label="Nombre" name="nombre" value={form.nombre} onChange={handleChange} required />
         <TextField label="Email" name="email" value={form.email} onChange={handleChange} required />
-        <TextField label="Nueva contraseña" name="password" type="password" value={form.password} onChange={handleChange} />
+        <TextField label="Nueva contraseña (solo si desea cambiarla)" name="password" type="password" value={form.password} onChange={handleChange} />
         <TextField select label="Rol" name="rol" value={form.rol} onChange={handleChange} required>
           {roles.map((r) => (
             <MenuItem key={r} value={r}>{r}</MenuItem>
@@ -78,6 +94,16 @@ const UsuarioEditForm = ({ usuario, onUsuarioActualizado, onCancelar }) => {
           <>
             <TextField label="Especialidad" name="especialidad" value={form.especialidad} onChange={handleChange} required />
             <TextField label="Matrícula" name="matricula" value={form.matricula} onChange={handleChange} required />
+            {/* 👈 NUEVO: Campo para modificar el tiempo del turno */}
+            <TextField
+              label="Duración del Turno (minutos)"
+              name="intervalo"
+              type="number"
+              value={form.intervalo}
+              onChange={handleChange}
+              required
+              helperText="Determina el lapso entre turnos para este profesional"
+            />
           </>
         )}
 

@@ -29,7 +29,7 @@ router.delete('/:id', verifyToken, checkRole(['RECEPCIONISTA']), turnoController
 router.put('/:id/estado', verifyToken, checkRole(['RECEPCIONISTA']), turnoController.updateEstado);
 
 // ... el resto de tus rutas siguen igual
-router.get('/disponibilidad', verifyToken, checkRole(['RECEPCIONISTA']), turnoController.getDisponibilidad);
+/* router.get('/disponibilidad', verifyToken, checkRole(['RECEPCIONISTA']), turnoController.getDisponibilidad); */
 router.get('/pendientes/:profesional_id', verifyToken, checkRole(['PROFESIONAL']), turnoController.getPendientesPorProfesional);
 
 // Ruta para que el profesional atienda el turno

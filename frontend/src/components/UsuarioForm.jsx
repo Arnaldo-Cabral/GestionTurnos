@@ -11,6 +11,7 @@ const UsuarioForm = ({ onUsuarioCreado }) => {
     password: '',
     rol: '',
     especialidad: '',
+    intervalo: 20, // valor entre turno por defecto
     matricula: ''
   });
 
@@ -31,6 +32,8 @@ const UsuarioForm = ({ onUsuarioCreado }) => {
       if (form.rol === 'PROFESIONAL') {
         payload.especialidad = form.especialidad;
         payload.matricula = form.matricula;
+        // 👈 CLAVE: Debes agregar el intervalo al payload que se envía al backend
+        payload.intervalo = form.intervalo;
       }
 
       const res = await api.post('/usuarios', payload);
@@ -42,7 +45,8 @@ const UsuarioForm = ({ onUsuarioCreado }) => {
         password: '',
         rol: '',
         especialidad: '',
-        matricula: ''
+        matricula: '',
+        intervalo: 20 // 👈 Resetear también a 20
       });
     } catch (error) {
       console.error('Error al crear usuario:', error);
@@ -101,6 +105,16 @@ const UsuarioForm = ({ onUsuarioCreado }) => {
               name="matricula"
               value={form.matricula}
               onChange={handleChange}
+              required
+            />
+            {/* NUEVO CAMPO PARA EL ADMIN */}
+            <TextField
+              label="Duración del Turno (minutos)"
+              name="intervalo"
+              type="number"
+              value={form.intervalo}
+              onChange={handleChange}
+              helperText="Tiempo que dura cada atención"
               required
             />
           </>

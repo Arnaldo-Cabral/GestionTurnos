@@ -18,6 +18,11 @@ const Profesional = sequelize.define('Profesional', {
   matricula: {
     type: DataTypes.STRING(50),
     allowNull: false
+  },
+  intervalo: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 20 // Por defecto 20 minutos
   }
 }, {
   tableName: 'profesionales',

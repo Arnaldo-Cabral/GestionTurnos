@@ -1,9 +1,38 @@
 const express = require('express');
 const router = express.Router();
-const { Agenda, Profesional, Turno } = require('../models');
+const agendaController = require('../controllers/agendaController');
+/* const { Agenda, Profesional, Turno } = require('../models'); */
 const { verifyToken, checkRole } = require('../middlewares/auth');
 
 // =======================================================
+// RUTAS PARA PROFESIONAL (Usan el controlador)
+// =======================================================
+
+// Crear bloque
+router.post('/', verifyToken, checkRole(['PROFESIONAL']), agendaController.create);
+
+// Ver mis bloques (Esta es la que llena "Mi Agenda")
+router.get('/', verifyToken, checkRole(['PROFESIONAL']), agendaController.getOwn);
+
+// Actualizar bloque
+router.put('/:id', verifyToken, checkRole(['PROFESIONAL']), agendaController.update);
+
+// Eliminar bloque
+router.delete('/:id', verifyToken, checkRole(['PROFESIONAL']), agendaController.remove);
+
+// =======================================================
+// RUTAS PARA RECEPCIONISTA
+// =======================================================
+
+// Ver bloques de un profesional específico
+router.get('/profesional/:id', verifyToken, checkRole(['RECEPCIONISTA']), agendaController.getByProfesional);
+
+// Ver disponibilidad (La que ya arreglamos con los 14/15 min)
+router.get('/disponibilidad', verifyToken, checkRole(['RECEPCIONISTA']), agendaController.getDisponibilidad); 
+
+module.exports = router;
+
+/* // =======================================================
 // CREATE: Profesional crea un bloque de agenda
 // =======================================================
 router.post('/', verifyToken, checkRole(['PROFESIONAL']), async (req, res) => {
@@ -104,56 +133,7 @@ router.get('/profesional/:id', verifyToken, checkRole(['RECEPCIONISTA']), async 
 // =======================================================
 // EXTRA: Obtener disponibilidad de un profesional en una fecha (RECEPCIONISTA)
 // =======================================================
-router.get('/disponibilidad', verifyToken, checkRole(['RECEPCIONISTA']), async (req, res) => {
-  try {
-    const { profesional_id, fecha } = req.query;
+router.get('/disponibilidad', verifyToken, checkRole(['RECEPCIONISTA']), agendaController.getDisponibilidad); 
 
-    if (!profesional_id || !fecha) {
-      return res.status(400).json({ error: 'Faltan parámetros: profesional_id y fecha' });
-    }
+module.exports = router; */
 
-    // Parsear fecha como local YYYY-MM-DD
-    const [year, month, day] = fecha.split("-").map(Number);
-    const fechaLocal = new Date(year, month - 1, day); // <-- mes empieza en 0
-
-    const diaSemana = fechaLocal.toLocaleDateString('es-AR', { weekday: 'long' });
-    const diaNormalizado = diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1).toLowerCase();
-
-    console.log("Fecha recibida:", fecha);
-    console.log("Fecha interpretada local:", fechaLocal.toString());
-    console.log("Día calculado:", diaSemana);
-    console.log("Día normalizado:", diaNormalizado);
-
-    // 1. Obtener agenda del profesional para ese día
-    const agenda = await Agenda.findAll({
-      where: { profesional_id, dia_semana: diaNormalizado, activo: true }
-    });
-    if (!agenda || agenda.length === 0) {
-      return res.json({ fecha, disponibles: [] });
-    }
-
-    // 2. Obtener turnos ya ocupados en esa fecha
-    const turnos = await Turno.findAll({ where: { profesional_id } });
-    const ocupadosHoras = turnos
-      .filter(t => new Date(t.fecha).toDateString() === new Date(fecha).toDateString())
-      .map(t => new Date(t.fecha).getHours());
-
-    // 3. Generar slots libres
-    let disponibles = [];
-    for (const bloque of agenda) {
-      const horaInicio = parseInt(bloque.hora_inicio.split(":")[0]);
-      const horaFin = parseInt(bloque.hora_fin.split(":")[0]);
-
-      for (let h = horaInicio; h < horaFin; h++) {
-        if (!ocupadosHoras.includes(h)) {
-          disponibles.push({ dia: bloque.dia_semana, hora: `${h.toString().padStart(2, "0")}:00` });
-        }
-      }
-    }
-
-    res.json({ fecha, disponibles });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-module.exports = router;

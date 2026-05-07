@@ -6,8 +6,8 @@ const bcrypt = require('bcrypt'); // <-- NECESARIO para hashear la contraseña
 // CREATE: CREAR USUARIO Y PROFESIONAL (Requiere Rol ADMIN)
 // ====================================================================
 exports.create = async (req, res) => {
-    const { nombre, email, password, especialidad, matricula } = req.body;
-    const rolAsignado = 'PROFESIONAL'; 
+    const { nombre, email, password, especialidad, matricula, intervalo } = req.body;
+    const rolAsignado = 'PROFESIONAL';
 
     if (!nombre || !email || !password || !especialidad || !matricula) {
         return res.status(400).json({ error: 'Faltan campos obligatorios para crear el profesional.' });
@@ -29,10 +29,11 @@ exports.create = async (req, res) => {
         const nuevoProfesional = await Profesional.create({
             usuario_id: nuevoUsuario.id,
             especialidad,
-            matricula
+            matricula,
+            intervalo: intervalo || 20 // Guardamos lo que puso el Admin
         });
 
-        res.status(201).json({ 
+        res.status(201).json({
             mensaje: 'Profesional creado exitosamente',
             usuario: {
                 id: nuevoUsuario.id,
@@ -71,12 +72,32 @@ exports.update = async (req, res) => {
         const profesional = await Profesional.findByPk(req.params.id);
         if (!profesional) return res.status(404).json({ error: 'Profesional no encontrado' });
 
-        await profesional.update(req.body); 
-        res.json(profesional);
+        // Extraemos los campos del body, incluyendo el nuevo campo intervalo
+        const { especialidad, matricula, intervalo } = req.body;
+
+        await profesional.update({
+            especialidad,
+            matricula,
+            intervalo // 👈 Ahora Sequelize permitirá actualizar este valor
+        });
+
+        res.json({ mensaje: 'Datos actualizados correctamente', profesional });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 };
+
+/* exports.update = async (req, res) => {
+    try {
+        const profesional = await Profesional.findByPk(req.params.id);
+        if (!profesional) return res.status(404).json({ error: 'Profesional no encontrado' });
+
+        await profesional.update(req.body);
+        res.json(profesional);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+}; */
 
 // ====================================================================
 // REMOVE

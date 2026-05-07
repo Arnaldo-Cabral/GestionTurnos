@@ -155,7 +155,7 @@ exports.remove = async (req, res) => {
 // ====================================================================
 // DISPONIBILIDAD
 // ====================================================================
-exports.getDisponibilidad = async (req, res) => {
+/* exports.getDisponibilidad = async (req, res) => {
   try {
     const { profesional_id, fecha } = req.query;
 
@@ -179,7 +179,7 @@ exports.getDisponibilidad = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-};
+}; */
 
 // ====================================================================
 // PENDIENTES POR PROFESIONAL

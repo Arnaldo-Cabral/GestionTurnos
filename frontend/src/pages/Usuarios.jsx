@@ -10,11 +10,18 @@ import {
   TableRow,
   Paper,
   Button,
-  Divider
+  Divider,
+  Chip 
 } from '@mui/material';
 import api from '../services/api';
 import UsuarioForm from '../components/UsuarioForm';
 import UsuarioEditForm from '../components/UsuarioEditForm';
+
+const JERARQUIA_ROLES = {
+  'ADMIN': 1,
+  'RECEPCIONISTA': 2,
+  'PROFESIONAL': 3
+};
 
 const Usuarios = () => {
   const [usuarios, setUsuarios] = useState([]);
@@ -33,14 +40,26 @@ const Usuarios = () => {
     cargarUsuarios();
   }, []);
 
+  // Lógica de ordenamiento de triple nivel
+  const usuariosOrdenados = [...usuarios].sort((a, b) => {
+    if (JERARQUIA_ROLES[a.rol] !== JERARQUIA_ROLES[b.rol]) {
+      return JERARQUIA_ROLES[a.rol] - JERARQUIA_ROLES[b.rol];
+    }
+    if (a.rol === 'PROFESIONAL' && b.rol === 'PROFESIONAL') {
+      const espA = a.Profesional?.especialidad || '';
+      const espB = b.Profesional?.especialidad || '';
+      if (espA !== espB) return espA.localeCompare(espB);
+    }
+    return a.nombre.localeCompare(b.nombre);
+  });
+
+  // ESTAS FUNCIONES ESTABAN COMENTADAS Y SON NECESARIAS:
   const agregarUsuario = (nuevo) => {
-    setUsuarios((prev) => [...prev, nuevo]);
+    cargarUsuarios(); 
   };
 
   const actualizarUsuario = (actualizado) => {
-    setUsuarios((prev) =>
-      prev.map((u) => (u.id === actualizado.id ? actualizado : u))
-    );
+    cargarUsuarios();
     setUsuarioEditando(null);
   };
 
@@ -48,6 +67,7 @@ const Usuarios = () => {
     <Container sx={{ mt: 4 }}>
       <Typography variant="h5" gutterBottom>Administrar usuarios</Typography>
 
+      {/* Aquí se usa agregarUsuario */}
       <UsuarioForm onUsuarioCreado={agregarUsuario} />
 
       <Divider sx={{ my: 3 }} />
@@ -56,21 +76,31 @@ const Usuarios = () => {
 
       <TableContainer component={Paper} sx={{ mt: 2 }}>
         <Table>
-          <TableHead>
+          <TableHead sx={{ bgcolor: '#f5f5f5' }}>
             <TableRow>
               <TableCell><strong>Nombre</strong></TableCell>
               <TableCell><strong>Email</strong></TableCell>
               <TableCell><strong>Rol</strong></TableCell>
-              <TableCell><strong>Acciones</strong></TableCell>
+              <TableCell><strong>Especialidad</strong></TableCell>
+              <TableCell align="center"><strong>Acciones</strong></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {usuarios.map((u) => (
-              <TableRow key={u.id}>
+            {usuariosOrdenados.map((u) => (
+              <TableRow key={u.id} hover>
                 <TableCell>{u.nombre}</TableCell>
                 <TableCell>{u.email}</TableCell>
-                <TableCell>{u.rol}</TableCell>
                 <TableCell>
+                  <Chip 
+                    label={u.rol} 
+                    size="small" 
+                    color={u.rol === 'ADMIN' ? 'primary' : u.rol === 'PROFESIONAL' ? 'secondary' : 'default'} 
+                  />
+                </TableCell>
+                <TableCell>
+                  {u.Profesional ? u.Profesional.especialidad : '-'}
+                </TableCell>
+                <TableCell align="center">
                   <Button
                     variant="outlined"
                     size="small"
