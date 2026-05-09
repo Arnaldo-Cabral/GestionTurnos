@@ -15,14 +15,6 @@ exports.getAll = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-/* exports.getAll = async (req, res) => {
-  try {
-    const usuarios = await Usuario.findAll();
-    res.json(usuarios);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-}; */
 
 exports.update = async (req, res) => {
   try {
@@ -61,34 +53,7 @@ exports.update = async (req, res) => {
         });
       }
     }
-    /* if (usuario.rol === 'PROFESIONAL') {
-      const profesional = await Profesional.findOne({ where: { usuario_id: usuario.id } });
 
-      if (profesional) {
-        // AQUÍ ESTÁ LA CLAVE: 
-        // Si el admin envía el campo vacío (""), mantenemos lo que ya estaba en la DB.
-        // Si envía un texto nuevo, se actualiza.
-        await profesional.update({
-          especialidad: (especialidad && especialidad.trim() !== "") ? especialidad.trim() : profesional.especialidad,
-          matricula: (matricula && matricula.trim() !== "") ? matricula.trim() : profesional.matricula,
-          intervalo: (intervalo !== undefined && intervalo !== "") ? parseInt(intervalo, 10) : profesional.intervalo
-        });
-      }
-    } */
-
-    /* // --- SECCIÓN PROFESIONAL ---
-    if (usuario.rol === 'PROFESIONAL') {
-      const profesional = await Profesional.findOne({ where: { usuario_id: usuario.id } });
-
-      if (profesional) {
-        // Solo sobreescribimos si el usuario envió un valor nuevo (no vacío)
-        await profesional.update({
-          especialidad: especialidad?.trim() || profesional.especialidad,
-          matricula: matricula?.trim() || profesional.matricula,
-          intervalo: intervalo !== undefined ? parseInt(intervalo, 10) : profesional.intervalo
-        });
-      }
-    } */
 
     // --- SECCIÓN RESPUESTA SEGURA ---
     // Al devolver el resultado, eliminamos la contraseña por seguridad
@@ -138,21 +103,23 @@ exports.create = async (req, res) => {
     }
 
     if (rol === 'PROFESIONAL') {
-      if (!especialidad || !matricula) {
-        return res.status(400).json({ error: 'Faltan especialidad o matrícula' });
-      }
-      // 2. Pasamos el intervalo a la creación 👈 NUEVO
       await Profesional.create({
         usuario_id: nuevoUsuario.id,
-        especialidad: especialidad.trim(), // 👈 Limpieza fundamental
+        especialidad: especialidad.trim(),
         matricula: matricula.trim(),
-        intervalo: intervalo || 20
+        // Usamos el intervalo que viene del body o el default de la DB (20)
+        intervalo: intervalo ? parseInt(intervalo, 10) : 20
       });
     }
 
-    res.status(201).json(nuevoUsuario);
+    // Importante: Devolver el usuario con el modelo Profesional incluido 
+    // para que el Front vea el intervalo inmediatamente.
+    const usuarioCreado = await Usuario.findByPk(nuevoUsuario.id, {
+      include: [{ model: Profesional }]
+    });
+
+    res.status(201).json(usuarioCreado);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
-

@@ -29,19 +29,7 @@ const UsuarioEditForm = ({ usuario, onUsuarioActualizado, onCancelar }) => {
       intervalo: usuario.Profesional?.intervalo || 20
     });
   }, [usuario]);
-  /* useEffect(() => {
-    setForm({
-      nombre: usuario.nombre,
-      email: usuario.email,
-      password: '',
-      rol: usuario.rol,
-      activo: usuario.activo,
-      especialidad: usuario.especialidad || '',
-      matricula: usuario.matricula || '',
-      intervalo: usuario.intervalo || 20 // 👈 NUEVO: Cargamos el valor que ya tiene en la DB
-    });
-  }, [usuario]); */
-
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
