@@ -7,8 +7,10 @@ const Paciente = sequelize.define('Paciente', {
   dni: { type: DataTypes.STRING(20), allowNull: false }, // 👈 sin unique aquí
   fecha_nacimiento: { type: DataTypes.DATEONLY, allowNull: false },
   telefono: { type: DataTypes.STRING(20) },
-  direccion: { type: DataTypes.STRING(255) }
-}, {
+  direccion: { type: DataTypes.STRING(255) },
+  obra_social: { type: DataTypes.STRING(100), defaultValue: 'Particular' }
+  }, 
+  {
   sequelize,
   tableName: 'pacientes',
   timestamps: false

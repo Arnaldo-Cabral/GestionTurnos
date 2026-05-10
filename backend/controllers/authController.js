@@ -20,6 +20,13 @@ exports.login = async (req, res) => {
     const usuario = await Usuario.findOne({ where: { email } });
     if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
 
+    // 🛡️ NUEVA VALIDACIÓN DE ESTADO ACTIVO
+    if (!usuario.activo) {
+      return res.status(403).json({ 
+        error: 'Tu cuenta está desactivada. Contacta al administrador.' 
+      });
+    }
+
     const match = await bcrypt.compare(password, usuario.password);
     if (!match) return res.status(401).json({ error: 'Contraseña incorrecta' });
 

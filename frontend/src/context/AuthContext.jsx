@@ -6,6 +6,7 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [usuario, setUsuario] = useState(null);
+  const [loading, setLoading] = useState(true); // 👈 NUEVO: Estado de carga
   const navigate = useNavigate();
 
   // Cargar usuario desde localStorage al iniciar
@@ -14,13 +15,21 @@ export const AuthProvider = ({ children }) => {
     if (token) {
       try {
         const decoded = jwtDecode(token);
-        setUsuario(decoded);
+
+        // Opcional: Verificar si el token expiró
+        const currentTime = Date.now() / 1000;
+        if (decoded.exp < currentTime) {
+          localStorage.removeItem('token');
+          setUsuario(null);
+        } else {
+          setUsuario(decoded);
+        }
       } catch (err) {
         console.error('Token inválido:', err);
         localStorage.removeItem('token');
-        setUsuario(null);
       }
     }
+    setLoading(false); // 👈 Terminó de verificar
   }, []);
 
   // Iniciar sesión
@@ -42,6 +51,10 @@ export const AuthProvider = ({ children }) => {
     navigate('/login');
   };
 
+  // 👈 IMPORTANTE: No renderizar la app hasta que sepamos si hay usuario
+  if (loading) {
+    return null; // O un spinner/cargando...
+  }
   return (
     <AuthContext.Provider value={{ usuario, login, logout }}>
       {children}
