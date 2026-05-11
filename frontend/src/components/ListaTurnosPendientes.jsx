@@ -17,7 +17,7 @@ const ListaTurnosPendientes = () => {
 
   const [open, setOpen] = useState(false);
   const [turnoSeleccionado, setTurnoSeleccionado] = useState(null);
-  const [formAtencion, setFormAtencion] = useState({ diagnostico: '', tratamiento: '', observaciones: '' });
+  const [formAtencion, setFormAtencion] = useState({ motivo_consulta: '', diagnostico: '', tratamiento: '', observaciones: '' });
 
   // Función auxiliar para formatear la fecha y hora
   const formatearFecha = (fechaISO) => {
@@ -40,13 +40,13 @@ const ListaTurnosPendientes = () => {
   };
 
   useEffect(() => { cargarTurnos(); }, [usuario]);
-  
+
   const handleAtenderClick = async (turno) => {
     // 🔍 Paso 1: Log para ver qué datos tiene el objeto en realidad
     console.log("Datos del turno:", turno);
 
     setTurnoSeleccionado(turno);
-    setHistorialPrevio([]); 
+    setHistorialPrevio([]);
 
     // 🔍 Paso 2: Intentamos obtener el ID del paciente de varias formas
     const idPaciente = turno.paciente_id || turno.Paciente?.id;
@@ -70,7 +70,28 @@ const ListaTurnosPendientes = () => {
     setOpen(true);
   };
 
+  // 2. Modifica la función handleConfirmarAtencion
   const handleConfirmarAtencion = async () => {
+    try {
+      // Preparamos los datos incluyendo el turno_id que tenemos en turnoSeleccionado
+      const datosParaEnviar = {
+        ...formAtencion,
+        turno_id: turnoSeleccionado.id // 👈 Crucial para el Backend
+      };
+
+      // Llamamos directamente a la API de historias clínicas
+      await api.post('/historias_clinicas', datosParaEnviar);
+
+      setOpen(false);
+      // Limpiamos el formulario
+      setFormAtencion({ motivo_consulta: '', diagnostico: '', tratamiento: '', observaciones: '' });
+      cargarTurnos(); // 👈 Esto hará el "refresh" automático de la lista
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.error || "Error al guardar la atención");
+    }
+  };
+  /* const handleConfirmarAtencion = async () => {
     try {
       await atenderTurnoAPI(turnoSeleccionado.id, formAtencion);
       setOpen(false);
@@ -79,7 +100,7 @@ const ListaTurnosPendientes = () => {
     } catch (error) {
       alert("Error al guardar la atención");
     }
-  };
+  }; */
 
   return (
     <Paper sx={{ p: 2, mt: 2 }}>
@@ -154,6 +175,13 @@ const ListaTurnosPendientes = () => {
 
           {/* --- FORMULARIO DE NUEVA ATENCIÓN --- */}
           <Typography variant="h6" color="secondary" gutterBottom>Nueva Entrada (Hoy)</Typography>
+          <TextField
+            label="Motivo de la Consulta *"
+            fullWidth
+            margin="normal"
+            value={formAtencion.motivo_consulta}
+            onChange={(e) => setFormAtencion({ ...formAtencion, motivo_consulta: e.target.value })}
+          />
           <TextField
             label="Diagnóstico Actual"
             fullWidth multiline rows={3} margin="normal"

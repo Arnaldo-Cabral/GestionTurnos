@@ -10,29 +10,34 @@ const HistoriaClinica = sequelize.define('HistoriaClinica', {
   },
   turno_id: {
     type: DataTypes.INTEGER,
-    unique: true
+    unique: true,
+    allowNull: false // 👈 Agregado: Una historia siempre debe pertenecer a un turno
+  },
+  // 👈 AGREGAR ESTO: Es el campo que faltaba
+  motivo_consulta: {
+    type: DataTypes.TEXT,
+    allowNull: false // 👈 Obligatorio
   },
   diagnostico: {
     type: DataTypes.TEXT,
-    allowNull: false
+    allowNull: false // 👈 Obligatorio
   },
   tratamiento: {
-    type: DataTypes.TEXT
+    type: DataTypes.TEXT,
+    allowNull: false // 👈 Agregado: No puede estar vacío por ley
   },
   observaciones: {
     type: DataTypes.TEXT
   },
-  // Definimos la columna exactamente como está en tu SQL
   fecha_registro: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW
   }
 }, {
   tableName: 'historiaclinicas',
-  timestamps: false // 👈 Desactivalo. Ya definimos fecha_registro arriba manualmente.
+  timestamps: false 
 });
 
-// Relación con Turno forzando la FK con guion bajo
 HistoriaClinica.belongsTo(Turno, { foreignKey: 'turno_id' });
 
 module.exports = HistoriaClinica;

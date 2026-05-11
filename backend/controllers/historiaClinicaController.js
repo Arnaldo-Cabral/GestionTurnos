@@ -12,7 +12,7 @@ exports.getByPaciente = async (req, res) => {
     // Filtro de confidencialidad para RECEPCIONISTA
     const hcAttributes = userRole === 'RECEPCIONISTA'
       ? { exclude: ['diagnostico', 'tratamiento', 'observaciones'] }
-      : { include: [] };
+      : { include: ['motivo_consulta'] };
 
     const historias = await HistoriaClinica.findAll({
       attributes: hcAttributes,
@@ -77,35 +77,36 @@ exports.getById = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    const historia = await HistoriaClinica.create(req.body);
+    const { turno_id, motivo_consulta, diagnostico, tratamiento, observaciones } = req.body;
+
+    // 🛡️ VALIDACIÓN ESTRICTA
+    if (!motivo_consulta?.trim() || !diagnostico?.trim() || !tratamiento?.trim()) {
+      return res.status(400).json({
+        error: 'El Motivo, Diagnóstico y Tratamiento son obligatorios.'
+      });
+    }
+
+    // 1. Creamos la historia clínica
+    const historia = await HistoriaClinica.create({
+      turno_id,
+      motivo_consulta: motivo_consulta.trim(),
+      diagnostico: diagnostico.trim(),
+      tratamiento: tratamiento.trim(),
+      observaciones: observaciones?.trim() || '',
+      fecha_registro: new Date()
+    });
+
+    // 2. ACTUALIZAMOS EL TURNO a 'REALIZADO' para que salga de la lista de pendientes
+    await Turno.update(
+      { estado: 'REALIZADO' },
+      { where: { id: turno_id } }
+    );
+
     res.status(201).json(historia);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
-
-exports.update = async (req, res) => {
-  try {
-    const historia = await HistoriaClinica.findByPk(req.params.id);
-    if (!historia) return res.status(404).json({ error: 'Historia clínica no encontrada' });
-    await historia.update(req.body);
-    res.json(historia);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-};
-
-exports.remove = async (req, res) => {
-  try {
-    const historia = await HistoriaClinica.findByPk(req.params.id);
-    if (!historia) return res.status(404).json({ error: 'Historia clínica no encontrada' });
-    await historia.destroy();
-    res.json({ mensaje: 'Historia clínica eliminada' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
 // Al final de tus otros métodos en historiaClinicaController.js
 exports.getAll = async (req, res) => {
   try {
