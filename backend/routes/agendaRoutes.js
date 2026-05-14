@@ -25,10 +25,12 @@ router.delete('/:id', verifyToken, checkRole(['PROFESIONAL']), agendaController.
 // =======================================================
 
 // Ver bloques de un profesional específico
-router.get('/profesional/:id', verifyToken, checkRole(['RECEPCIONISTA']), agendaController.getByProfesional);
-
-// Ver disponibilidad (La que ya arreglamos con los 14/15 min)
+/* router.get('/profesional/:id', verifyToken, checkRole(['RECEPCIONISTA']), agendaController.getByProfesional);
 router.get('/disponibilidad', verifyToken, checkRole(['RECEPCIONISTA']), agendaController.getDisponibilidad); 
+ */
+// Cambia esto en tu archivo de rutas de agenda
+router.get('/profesional/:id', verifyToken, checkRole(['RECEPCIONISTA', 'ADMIN']), agendaController.getByProfesional);
+router.get('/disponibilidad', verifyToken, checkRole(['RECEPCIONISTA', 'ADMIN']), agendaController.getDisponibilidad);
 
 module.exports = router;
 

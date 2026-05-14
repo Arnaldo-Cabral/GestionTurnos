@@ -1,4 +1,4 @@
-/* const { Op, fn, col } = require('sequelize'); */
+const dayjs = require('dayjs'); // 👈 AGREGA ESTO
 const { Op } = require('sequelize');
 const Agenda = require('../models/Agenda');
 const Profesional = require('../models/Profesional');
@@ -152,133 +152,55 @@ exports.getDisponibilidad = async (req, res) => {
       return res.status(400).json({ error: 'Faltan parámetros' });
     }
 
-    // 1. Obtener el intervalo real de la DB
+    // 1. Obtener el profesional para usar su INTERVALO
     const profesional = await Profesional.findByPk(profesional_id);
-    const intervalo = profesional ? profesional.intervalo : 20;
+    if (!profesional) return res.status(404).json({ error: 'Profesional no encontrado' });
+    const intervalo = profesional.intervalo || 20; // Default por si acaso
 
-    // 2. Normalizar día
-    const fechaObj = new Date(fecha + 'T12:00:00'); // Forzamos mediodía para evitar errores de zona horaria
-    const diaSemana = fechaObj.toLocaleDateString('es-AR', { weekday: 'long' });
-    const diaNormalizado = normalizarDia(diaSemana);
+    // 2. Determinar el día de la semana (Lunes, Martes...)
+    // Usamos 'en-US' para obtener el nombre y luego mapearlo o forzarlo a lo que espera el ENUM
+    const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const diaSemanaNombre = dias[dayjs(fecha).day()];
 
-    // 3. Buscar agenda
+    // 3. Buscar bloques de agenda para ese día
     const bloques = await Agenda.findAll({
-      where: { profesional_id, activo: true, dia_semana: diaNormalizado }
+      where: { profesional_id, activo: true, dia_semana: diaSemanaNombre }
     });
 
-    // 4. Turnos ocupados
-    const turnos = await Turno.findAll({
-      where: { profesional_id, fecha: { [Op.startsWith]: fecha } }
+    // 4. Buscar turnos ya ocupados ese día
+    const turnosOcupados = await Turno.findAll({
+      where: { 
+        profesional_id, 
+        fecha: { [Op.startsWith]: fecha },
+        estado: { [Op.ne]: 'CANCELADO' } // No contar los cancelados como ocupados
+      }
     });
 
-    // Formateamos ocupados a "HH:mm" para comparar exacto
-    const ocupados = turnos.map(t => {
-      const d = new Date(t.fecha);
-      return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
-    });
+    // Formatear ocupados a HH:mm
+    const horasOcupadas = turnosOcupados.map(t => dayjs(t.fecha).format('HH:mm'));
 
     const disponibles = [];
 
     for (const bloque of bloques) {
-      // IMPORTANTE: MySQL devuelve "09:00:00". Usamos split para evitar errores de Date
-      const [startH, startM] = bloque.hora_inicio.split(':');
-      const [endH, endM] = bloque.hora_fin.split(':');
+      let inicio = dayjs(`${fecha} ${bloque.hora_inicio}`);
+      const fin = dayjs(`${fecha} ${bloque.hora_fin}`);
 
-      let actual = new Date(fechaObj);
-      actual.setHours(parseInt(startH), parseInt(startM), 0);
+      while (inicio.isBefore(fin)) {
+        const horaActual = inicio.format('HH:mm');
 
-      let fin = new Date(fechaObj);
-      fin.setHours(parseInt(endH), parseInt(endM), 0);
-
-      // BUCLE DE GENERACIÓN POR INTERVALO
-      while (actual < fin) {
-        const hh = actual.getHours().toString().padStart(2, '0');
-        const mm = actual.getMinutes().toString().padStart(2, '0');
-        const horaStr = `${hh}:${mm}`;
-
-        if (!ocupados.includes(horaStr)) {
+        if (!horasOcupadas.includes(horaActual)) {
           disponibles.push({
-            dia: bloque.dia_semana,
-            hora: horaStr,
-            fecha: `${fecha}T${horaStr}:00`
+            dia: diaSemanaNombre,
+            hora: horaActual,
+            fecha: inicio.format('YYYY-MM-DDTHH:mm:ss') // Formato ISO para la DB
           });
         }
-
-        // SUMAMOS EL INTERVALO (15, 20, 14 min...) 👈 ESTA ES LA CLAVE
-        actual.setMinutes(actual.getMinutes() + intervalo);
+        inicio = inicio.add(intervalo, 'minute');
       }
     }
 
     res.json({ fecha, disponibles, intervalo_usado: intervalo });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
-
-/* exports.getDisponibilidad = async (req, res) => {
-  try {
-    const { profesional_id, fecha } = req.query;
-
-    if (!profesional_id || !fecha) {
-      return res.status(400).json({ error: 'Faltan parámetros: profesional_id y fecha' });
-    }
-
-    // Día de la semana (localizado) de la fecha seleccionada
-    const diaSemana = new Date(fecha).toLocaleDateString('es-AR', { weekday: 'long' });
-    const diaNormalizado = normalizarDia(diaSemana);
-
-    // 1) Bloques de agenda activos para ese día (comparación insensible a mayúsculas)
-    const pid = Number(profesional_id);
-    const agenda = await Agenda.findAll({
-      where: {
-        profesional_id: pid,
-        activo: true,
-        dia_semana: fn('LOWER', col('dia_semana')), // columna en minúscula
-      },
-      order: [['hora_inicio', 'ASC']]
-    });
-
-    // Filtramos manualmente por coincidencia insensible
-    const agendaFiltrada = agenda.filter(a => a.dia_semana.toLowerCase() === diaNormalizado.toLowerCase());
-
-    if (!agendaFiltrada || agendaFiltrada.length === 0) {
-      return res.json({ fecha, disponibles: [] });
-    }
-
-    // 2) Turnos ocupados en esa fecha
-    const turnos = await Turno.findAll({ where: { profesional_id: pid } });
-    const fechaBase = new Date(fecha).toDateString();
-    const ocupadosHoras = turnos
-      .filter(t => new Date(t.fecha).toDateString() === fechaBase)
-      .map(t => new Date(t.fecha).getHours());
-
-    // 3) Generar slots libres a intervalos de 60 minutos
-    const disponibles = [];
-    for (const bloque of agendaFiltrada) {
-      const [hIni] = bloque.hora_inicio.split(':').map(n => parseInt(n, 10));
-      const [hFin] = bloque.hora_fin.split(':').map(n => parseInt(n, 10));
-
-      
-      for (let h = hIni; h < hFin; h++) {
-        if (!ocupadosHoras.includes(h)) {
-          const horaStr = `${h.toString().padStart(2, '0')}:00`;
-          const fechaCompleta = `${fecha}T${horaStr}:00`;
-
-          disponibles.push({
-            dia: bloque.dia_semana,
-            hora: horaStr,
-            fecha: fechaCompleta
-          });
-        }
-      }
-    }
-
-    console.log("Slots generados:", disponibles);
-
-    res.json({ fecha, disponibles });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
- */

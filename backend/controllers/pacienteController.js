@@ -60,17 +60,6 @@ exports.update = async (req, res) => {
   }
 };
 
-/* exports.update = async (req, res) => {
-  try {
-    const paciente = await Paciente.findByPk(req.params.id);
-    if (!paciente) return res.status(404).json({ error: 'Paciente no encontrado' });
-    await paciente.update(req.body);
-    res.json(paciente);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-}; */
-
 exports.remove = async (req, res) => {
   try {
     const paciente = await Paciente.findByPk(req.params.id);

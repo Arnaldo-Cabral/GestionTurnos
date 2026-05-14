@@ -39,6 +39,16 @@ const ListaTurnosPendientes = () => {
     }
   };
 
+  const calcularEdad = (fechaNacimiento) => {
+    if (!fechaNacimiento) return 'N/A';
+    const hoy = new Date();
+    const cumple = new Date(fechaNacimiento);
+    let edad = hoy.getFullYear() - cumple.getFullYear();
+    const m = hoy.getMonth() - cumple.getMonth();
+    if (m < 0 || (m === 0 && hoy.getDate() < cumple.getDate())) edad--;
+    return edad;
+  };
+
   useEffect(() => { cargarTurnos(); }, [usuario]);
 
   const handleAtenderClick = async (turno) => {
@@ -91,16 +101,6 @@ const ListaTurnosPendientes = () => {
       alert(error.response?.data?.error || "Error al guardar la atención");
     }
   };
-  /* const handleConfirmarAtencion = async () => {
-    try {
-      await atenderTurnoAPI(turnoSeleccionado.id, formAtencion);
-      setOpen(false);
-      setFormAtencion({ diagnostico: '', tratamiento: '', observaciones: '' });
-      cargarTurnos();
-    } catch (error) {
-      alert("Error al guardar la atención");
-    }
-  }; */
 
   return (
     <Paper sx={{ p: 2, mt: 2 }}>
@@ -110,7 +110,6 @@ const ListaTurnosPendientes = () => {
       <List>
         {turnos.map(turno => {
           const { dia, hora } = formatearFecha(turno.fecha); // Extraemos hora y día
-
           return (
             <ListItem
               key={turno.id}
@@ -125,13 +124,17 @@ const ListaTurnosPendientes = () => {
                 primary={
                   <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
                     {hora} hs — {turno.Paciente?.nombre || 'Paciente desconocido'}
+                    <span style={{ fontWeight: 'normal', fontSize: '0.9rem', marginLeft: '10px' }}>
+                      ({calcularEdad(turno.Paciente?.fecha_nacimiento)} años)
+                    </span>
                   </Typography>
                 }
                 secondary={
                   <>
                     <Typography variant="body2" component="span" display="block">
-                      Fecha: {dia} | DNI: {turno.Paciente?.dni}
+                      OS: <strong>{turno.Paciente?.obra_social || 'Particular'}</strong> | DNI: {turno.Paciente?.dni}
                     </Typography>
+                    {/* Asegúrate de que no haya llaves con espacios vacíos aquí */}
                     <Typography variant="caption" color="text.secondary">
                       ID Turno: #{turno.id} | Estado: {turno.estado}
                     </Typography>

@@ -22,22 +22,35 @@ const SeleccionarProfesional = ({ onSelect }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     obtenerEspecialidades(token)
-      .then(res => setEspecialidades(res.data))
+      .then(res => {
+        // Ordenamos las especialidades alfabéticamente
+        const ordenadas = Array.isArray(res.data)
+          ? res.data.sort((a, b) => a.localeCompare(b))
+          : [];
+        setEspecialidades(ordenadas);
+      })
       .catch(err => console.error('Error al cargar especialidades', err));
   }, []);
-
+  
   // 2. Función de búsqueda manual
   const handleBuscar = async () => {
     const token = localStorage.getItem('token');
     try {
       const res = await buscarProfesionalesPorEspecialidad(especialidad.trim(), token);
-      setProfesionales(Array.isArray(res.data) ? res.data : []);
+      const data = Array.isArray(res.data) ? res.data : [];
+
+      // Ordenamos por el nombre del usuario
+      const ordenados = data.sort((a, b) =>
+        (a.Usuario?.nombre || "").localeCompare(b.Usuario?.nombre || "")
+      );
+
+      setProfesionales(ordenados);
     } catch (error) {
       console.error('Error al buscar profesionales', error);
       setProfesionales([]);
     }
   };
-
+ 
   // ========================================================
   // AQUÍ VA EL NUEVO BLOQUE (Justo antes del handleSelectProfesional)
   // ========================================================
@@ -55,42 +68,6 @@ const SeleccionarProfesional = ({ onSelect }) => {
     onSelect(p);
   };
 
-  /* const SeleccionarProfesional = ({ onSelect }) => {
-    const [especialidades, setEspecialidades] = useState([]);
-    const [especialidad, setEspecialidad] = useState('');
-    const [profesionales, setProfesionales] = useState([]);
-    const [profesionalSeleccionado, setProfesionalSeleccionado] = useState(null);
-  
-    // Cargar especialidades al montar
-    useEffect(() => {
-      const token = localStorage.getItem('token');
-      obtenerEspecialidades(token)
-        .then(res => {
-          console.log('Especialidades recibidas:', res.data);
-          setEspecialidades(res.data);
-        })
-        .catch(err => console.error('Error al cargar especialidades', err));
-    }, []);
-  
-    // Buscar profesionales por especialidad
-    const handleBuscar = async () => {
-      const token = localStorage.getItem('token');
-      try {
-        // Usamos trim() por si acaso hay espacios en la selección
-        const res = await buscarProfesionalesPorEspecialidad(especialidad.trim(), token);
-        console.log('Profesionales recibidos:', res.data);
-        setProfesionales(Array.isArray(res.data) ? res.data : []);
-      } catch (error) {
-        console.error('Error al buscar profesionales', error);
-        setProfesionales([]);
-      }
-    };
-  
-    const handleSelectProfesional = (p) => {
-      setProfesionalSeleccionado(p);
-      onSelect(p); // avisa al padre (AsignarTurno.jsx)
-    };
-   */
   return (
     <Box>
       <Typography variant="subtitle1" gutterBottom>
