@@ -61,21 +61,21 @@ const Dashboard = () => {
             </Button>
 
             {/* SECCIÓN NUEVA: Vista rápida de turnos pendientes directamente en el Dashboard */}
-            <Box sx={{ mt: 4 }}>
+            {/* <Box sx={{ mt: 4 }}>
               <Divider sx={{ mb: 2 }}>
                 <Typography variant="overline" color="textSecondary">
                   Tus próximos turnos
                 </Typography>
               </Divider>
               <ListaTurnosPendientes />
-            </Box>
+            </Box> */}
           </>
         )}
       </Stack>
 
-      <Button variant="outlined" color="error" onClick={logout} sx={{ mt: 2 }}>
+      {/* <Button variant="outlined" color="error" onClick={logout} sx={{ mt: 2 }}>
         Cerrar sesión
-      </Button>
+      </Button> */}
     </Container>
   );
 };

@@ -59,9 +59,76 @@ exports.create = async (req, res) => {
 };
 
 // ====================================================================
-// READ: Obtener todos los turnos
+// READ: Obtener turnos con filtros inteligentes (Fecha, Profesional, Paciente)
 // ====================================================================
 exports.getAll = async (req, res) => {
+  try {
+    // 1. Extraemos los parámetros de la URL (query params)
+    const { fecha, busqueda, profesionalId } = req.query;
+
+    // 2. Construcción dinámica del objeto de filtros (WHERE)
+    let whereTurno = {};
+
+    // --- FILTRO DE FECHA ---
+    if (fecha) {
+      // Si el usuario eligió una fecha en el calendario (YYYY-MM-DD)
+      const inicio = new Date(fecha + 'T00:00:00');
+      const fin = new Date(fecha + 'T23:59:59');
+      whereTurno.fecha = { [Op.between]: [inicio, fin] };
+    } else {
+      // SI NO HAY FECHA, POR DEFECTO ES "HOY"
+      const hoy = new Date();
+      const inicioHoy = new Date(hoy.setHours(0, 0, 0, 0));
+      const finHoy = new Date(hoy.setHours(23, 59, 59, 999));
+      whereTurno.fecha = { [Op.between]: [inicioHoy, finHoy] };
+    }
+
+    // --- FILTRO DE PROFESIONAL ---
+    if (profesionalId) {
+      whereTurno.profesional_id = profesionalId;
+    }
+
+    // 3. Configuración de la consulta con INCLUDES y FILTRO DE PACIENTE
+    const turnos = await Turno.findAll({
+      where: whereTurno,
+      include: [
+        {
+          model: Paciente,
+          attributes: ['id', 'nombre', 'dni', 'telefono'],
+          // --- FILTRO TIPO EXCEL PARA PACIENTE ---
+          where: busqueda ? {
+            [Op.or]: [
+              { nombre: { [Op.like]: `%${busqueda}%` } },
+              { dni: { [Op.like]: `%${busqueda}%` } }
+            ]
+          } : null,
+          required: busqueda ? true : false // Si busca un paciente, solo trae turnos de ese paciente
+        },
+        {
+          model: Profesional,
+          attributes: ['id', 'especialidad'],
+          include: [{ model: Usuario, attributes: ['nombre'] }]
+        },
+        {
+          model: Recepcionista,
+          attributes: ['id'],
+          include: [{ model: Usuario, attributes: ['nombre'] }]
+        }
+      ],
+      order: [['fecha', 'ASC']] // Siempre ordenados por hora
+    });
+
+    res.json(turnos);
+  } catch (error) {
+    console.error("❌ Error al obtener turnos filtrados:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// ====================================================================
+// READ: Obtener todos los turnos
+// ====================================================================
+/* exports.getAll = async (req, res) => {
   try {
     const turnos = await Turno.findAll({
       include: [
@@ -84,7 +151,7 @@ exports.getAll = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
+ */
 exports.update = async (req, res) => {
   try {
     const turno = await Turno.findByPk(req.params.id);
